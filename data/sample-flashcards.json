@@ -1,0 +1,42 @@
+[
+    {
+        "lessonId": "cln_lesson_0001",
+        "order": 1,
+        "frontText": "Ahoj",
+        "backText": "Merhaba",
+        "audioFileName": "unit01_lesson01_card01.mp3",
+        "example": "Ahoj! Jak se máš? — Merhaba! Nasılsın?"
+    },
+    {
+        "lessonId": "cln_lesson_0001",
+        "order": 2,
+        "frontText": "Děkuji",
+        "backText": "Teşekkür ederim",
+        "audioFileName": "unit01_lesson01_card02.mp3",
+        "example": "Děkuji za pomoc — Yardım için teşekkür ederim"
+    },
+    {
+        "lessonId": "cln_lesson_0001",
+        "order": 3,
+        "frontText": "Na shledanou",
+        "backText": "Hoşça kal",
+        "audioFileName": "unit01_lesson01_card03.mp3",
+        "example": "Na shledanou! — Hoşça kal!"
+    },
+    {
+        "lessonId": "cln_lesson_0001",
+        "order": 4,
+        "frontText": "Dobrý den",
+        "backText": "İyi günler",
+        "audioFileName": "unit01_lesson01_card04.mp3",
+        "example": "Dobrý den! — İyi günler!"
+    },
+    {
+        "lessonId": "cln_lesson_0001",
+        "order": 5,
+        "frontText": "Dobrý večer",
+        "backText": "İyi akşamlar",
+        "audioFileName": "unit01_lesson01_card05.mp3",
+        "example": "Dobrý večer! — İyi akşamlar!"
+    }
+]

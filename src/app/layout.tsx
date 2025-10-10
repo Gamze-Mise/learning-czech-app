@@ -16,6 +16,10 @@ export const metadata: Metadata = {
   title: "Czech Learning App",
   description:
     "Learn Czech language with interactive lessons, flashcards, and quizzes",
+  icons: {
+    icon: "/icon.svg",
+    apple: "/apple-icon.svg",
+  },
 };
 
 export default function RootLayout({

@@ -1,0 +1,100 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      String   @default("user") // "user" veya "admin"
+  createdAt DateTime @default(now())
+  progresses FlashcardProgress[]
+  exercises  ExerciseResult[]
+}
+
+model Unit {
+  id          String   @id @default(cuid())
+  title       String
+  order       Int
+  description String?
+  lessons     Lesson[]
+}
+
+model Lesson {
+  id          String      @id @default(cuid())
+  unitId      String
+  title       String
+  order       Int
+  description String?
+  parts       LessonPart[]
+  flashcards  Flashcard[]
+  exercises   Exercise[]
+  unit        Unit        @relation(fields: [unitId], references: [id], onDelete: Cascade)
+}
+
+model LessonPart {
+  id        String  @id @default(cuid())
+  lessonId  String
+  order     Int
+  type      String  // 'text' | 'audio' | 'flashcard_list' | 'exercise'
+  content   Json?   // markdown or structured JSON
+  audioUrl  String? // '/uploads/...' path
+  lesson    Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+}
+
+model Flashcard {
+  id        String  @id @default(cuid())
+  lessonId  String
+  order     Int
+  frontText String
+  backText  String
+  audioUrl  String?
+  example   String?
+  lesson    Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  progresses FlashcardProgress[]
+}
+
+model FlashcardProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  flashcardId String
+  box         Int      @default(1) // Leitner box 1..5
+  lastSeen    DateTime?
+  nextDue     DateTime?
+  correctCount Int     @default(0)
+  wrongCount   Int     @default(0)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flashcard   Flashcard @relation(fields: [flashcardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, flashcardId])
+}
+
+model Exercise {
+  id        String   @id @default(cuid())
+  lessonId  String
+  order     Int
+  type      String   // 'mcq' | 'fill'
+  question  String
+  options   Json?    // mcq -> [{text, correct}]
+  answer    String?  // fill -> correct answer
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  results   ExerciseResult[]
+}
+
+model ExerciseResult {
+  id         String   @id @default(cuid())
+  userId     String
+  exerciseId String
+  correct    Boolean
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+}
