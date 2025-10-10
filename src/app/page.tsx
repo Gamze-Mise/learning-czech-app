@@ -1,86 +1,112 @@
 export default function Home() {
   return (
-    <div className="space-y-8">
-      {/* Hero Section */}
-      <section className="text-center py-12 lg:py-20">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 mb-6">
-          🇨🇿 Learn Czech
+    <div className="space-y-6">
+      {/* Welcome Section */}
+      <div className="text-center py-8">
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">
+          🇨🇿 Welcome to Czech Learning
         </h1>
-        <p className="text-lg sm:text-xl text-gray-600 mb-8 max-w-3xl mx-auto px-4">
-          Master the Czech language with interactive lessons, flashcards, and
-          quizzes. Learn effectively and have fun while progressing!
+        <p className="text-gray-600">
+          Start your journey to master the Czech language
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center px-4">
-          <button className="bg-blue-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200 text-sm sm:text-base">
-            Start Learning
-          </button>
-          <button className="border-2 border-blue-600 text-blue-600 px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold hover:bg-blue-50 transition-colors duration-200 text-sm sm:text-base">
-            Watch Demo
-          </button>
-        </div>
-      </section>
+      </div>
 
-      {/* Features Section */}
-      <section className="py-12 lg:py-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-          <div className="text-center p-6 lg:p-8 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <div className="text-4xl lg:text-5xl mb-4">📚</div>
-            <h3 className="text-lg lg:text-xl font-semibold mb-3">
-              Structured Lessons
+      {/* Dashboard Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Dashboard - Progress Panel */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Dashboard</h2>
+
+          {/* Progress Section */}
+          <div className="mb-6">
+            <h3 className="text-sm font-semibold text-gray-600 mb-3">
+              Progress
             </h3>
-            <p className="text-gray-600 text-sm lg:text-base">
-              Progress step by step from beginner to advanced levels
-            </p>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-700">Vocabulary</span>
+                <span className="text-sm font-medium text-blue-600">80%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full"
+                  style={{ width: "80%" }}
+                ></div>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-700">Grammar</span>
+                <span className="text-sm font-medium text-blue-600">40%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full"
+                  style={{ width: "40%" }}
+                ></div>
+              </div>
+            </div>
           </div>
 
-          <div className="text-center p-6 lg:p-8 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <div className="text-4xl lg:text-5xl mb-4">🃏</div>
-            <h3 className="text-lg lg:text-xl font-semibold mb-3">
-              Flashcards
+          {/* Units Section */}
+          <div className="mb-6">
+            <h3 className="text-sm font-semibold text-gray-600 mb-3">Units</h3>
+            <div className="grid grid-cols-3 gap-2">
+              {[1, 2, 3, 4, 5, 6].map((unit) => (
+                <a
+                  key={unit}
+                  href={`/units/${unit}`}
+                  className={`p-3 rounded-lg text-center text-sm font-medium transition-colors ${
+                    unit === 1
+                      ? "bg-blue-100 text-blue-700 border-2 border-blue-300"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  Unit {unit}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <button className="w-full bg-white border-2 border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+            Review
+          </button>
+        </div>
+
+        {/* Dashboard - Recommended Panel */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Dashboard</h2>
+
+          {/* Recommended Section */}
+          <div className="mb-6">
+            <h3 className="text-sm font-semibold text-gray-600 mb-3">
+              Recommended
             </h3>
-            <p className="text-gray-600 text-sm lg:text-base">
-              Memorize vocabulary effectively with spaced repetition
-            </p>
+            <div className="space-y-3">
+              <a
+                href="/units/3/lessons/2"
+                className="block bg-blue-50 rounded-lg p-3 hover:bg-blue-100 transition-colors"
+              >
+                <p className="text-sm text-blue-800 font-medium">Unit 3</p>
+                <p className="text-xs text-blue-600">Lesson 2</p>
+              </a>
+              <a
+                href="/grammar/present-tense"
+                className="block bg-green-50 rounded-lg p-3 hover:bg-green-100 transition-colors"
+              >
+                <p className="text-sm text-green-800 font-medium">Grammar</p>
+                <p className="text-xs text-green-600">Present tense</p>
+              </a>
+            </div>
           </div>
 
-          <div className="text-center p-6 lg:p-8 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 sm:col-span-2 lg:col-span-1">
-            <div className="text-4xl lg:text-5xl mb-4">🎯</div>
-            <h3 className="text-lg lg:text-xl font-semibold mb-3">Quizzes</h3>
-            <p className="text-gray-600 text-sm lg:text-base">
-              Test your knowledge and track your progress
-            </p>
-          </div>
+          <a
+            href="/units/3/lessons/2"
+            className="block w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors text-center"
+          >
+            Continue
+          </a>
         </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-8 lg:p-12 text-center">
-        <h2 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-8">
-          Why Learn Czech?
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div className="bg-white rounded-xl p-6 shadow-md">
-            <div className="text-3xl lg:text-4xl font-bold text-blue-600 mb-3">
-              10M+
-            </div>
-            <p className="text-gray-600 font-medium">
-              Czech speakers worldwide
-            </p>
-          </div>
-          <div className="bg-white rounded-xl p-6 shadow-md">
-            <div className="text-3xl lg:text-4xl font-bold text-blue-600 mb-3">
-              EU
-            </div>
-            <p className="text-gray-600 font-medium">Official EU language</p>
-          </div>
-          <div className="bg-white rounded-xl p-6 shadow-md sm:col-span-2 lg:col-span-1">
-            <div className="text-3xl lg:text-4xl font-bold text-blue-600 mb-3">
-              1000+
-            </div>
-            <p className="text-gray-600 font-medium">Vocabulary words</p>
-          </div>
-        </div>
-      </section>
+      </div>
     </div>
   );
 }
