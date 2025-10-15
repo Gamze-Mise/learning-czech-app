@@ -45,61 +45,130 @@ A comprehensive Czech language learning application built with Next.js, TypeScri
 
 ### Prerequisites
 
-- Node.js 18+
-- npm, yarn, pnpm, or bun
+- **Node.js 18+** (Download from [nodejs.org](https://nodejs.org/))
+- **npm, yarn, pnpm, or bun** (npm comes with Node.js)
 
-### Installation
+### Quick Start
 
-1. Clone the repository:
+1. **Clone the repository:**
 
 ```bash
 git clone https://github.com/yourusername/learning-czech-app.git
 cd learning-czech-app
 ```
 
-2. Install dependencies:
+2. **Install dependencies:**
 
 ```bash
 npm install
-# or
-yarn install
-# or
-pnpm install
 ```
 
-3. Run the development server:
+3. **Set up environment variables:**
+
+```bash
+# Copy the example environment file
+cp env.example .env.local
+
+# Edit .env.local with your configuration
+# DATABASE_URL="file:./dev.db"
+# NEXTAUTH_URL="http://localhost:3000"
+# NEXTAUTH_SECRET="your_secret_here"
+```
+
+4. **Set up the database:**
+
+```bash
+# Generate Prisma client
+npm run db:generate
+
+# Run database migrations
+npm run db:migrate
+
+# Seed the database with sample data
+npm run db:seed
+```
+
+5. **Start the development server:**
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+6. **Open your browser:**
+   Navigate to [http://localhost:3000](http://localhost:3000) to see the application.
+
+### Available Scripts
+
+```bash
+# Development
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run start        # Start production server
+
+# Database
+npm run db:generate  # Generate Prisma client
+npm run db:migrate   # Run database migrations
+npm run db:seed      # Seed database with sample data
+npm run db:studio    # Open Prisma Studio (database GUI)
+
+# Data Import
+npm run import:flashcards  # Import flashcards from JSON
+```
+
+### Environment Variables
+
+Create a `.env.local` file in the root directory:
+
+```env
+# Database
+DATABASE_URL="file:./dev.db"
+
+# NextAuth.js
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your_secret_here"
+
+# Optional: External Services
+# GOOGLE_CLIENT_ID="your_google_client_id"
+# GOOGLE_CLIENT_SECRET="your_google_client_secret"
+```
 
 ## 📁 Project Structure
 
 ```
-src/
-├── app/                    # Next.js App Router
-│   ├── (auth)/            # Authentication routes
-│   ├── dashboard/         # User dashboard
-│   ├── lessons/           # Lesson pages
-│   ├── flashcards/        # Flashcard interface
-│   ├── quizzes/           # Quiz pages
-│   └── profile/           # User profile
-├── components/            # Reusable UI components
-│   ├── ui/               # Basic UI components
-│   ├── learning/         # Learning-specific components
-│   └── layout/           # Layout components
-├── lib/                  # Utility functions and configurations
-├── hooks/                # Custom React hooks
-├── types/                # TypeScript type definitions
-└── data/                 # Static data and content
+learning-czech-app/
+├── src/
+│   ├── app/                    # Next.js App Router
+│   │   ├── layout.tsx          # Root layout
+│   │   ├── page.tsx            # Home page
+│   │   ├── globals.css         # Global styles
+│   │   └── units/              # Unit pages
+│   │       └── [id]/
+│   │           ├── page.tsx    # Unit detail page
+│   │           └── lessons/
+│   │               └── [lessonId]/
+│   │                   └── page.tsx  # Lesson page
+│   ├── components/             # Reusable UI components
+│   │   ├── Header.tsx          # Site header
+│   │   ├── Footer.tsx          # Site footer
+│   │   ├── Button.tsx          # Button component
+│   │   ├── Card.tsx            # Card component
+│   │   ├── ProgressBar.tsx     # Progress bar component
+│   │   └── PageHeader.tsx      # Page header component
+│   └── lib/                    # Utility functions
+│       ├── prisma.ts           # Prisma client
+│       └── srs.ts              # Spaced repetition system
+├── prisma/
+│   ├── schema.prisma           # Database schema
+│   └── seed.ts                 # Database seed data
+├── data/
+│   └── sample-flashcards.json  # Sample flashcard data
+├── scripts/
+│   └── import-flashcards.ts    # Flashcard import script
+├── env.example                 # Environment variables example
+├── package.json                # Dependencies and scripts
+├── next.config.ts              # Next.js configuration
+├── tsconfig.json               # TypeScript configuration
+└── README.md                   # This file
 ```
 
 ## 🎯 Development Roadmap

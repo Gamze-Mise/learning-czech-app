@@ -8,9 +8,12 @@
     "start": "next start",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
-    "db:seed": "ts-node prisma/seed.ts",
+    "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "import:flashcards": "ts-node scripts/import-flashcards.ts"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   },
   "dependencies": {
     "@prisma/client": "^6.17.1",

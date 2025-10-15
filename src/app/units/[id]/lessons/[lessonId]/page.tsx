@@ -1,203 +1,309 @@
+import PageHeader from "@/components/PageHeader";
+import Card from "@/components/Card";
+import ProgressBar from "@/components/ProgressBar";
+import Button from "@/components/Button";
+import { prisma } from "@/lib/prisma";
+import { notFound } from "next/navigation";
+
 export default async function LessonPage({
   params,
 }: {
-  params: Promise<{ id: string; lessonId: string }>;
+  params: { id: string; lessonId: string };
 }) {
-  const { id: unitId, lessonId } = await params;
+  const { id: unitId, lessonId } = params;
 
-  // Mock lesson data - later this will come from a database
-  const lessonData = {
-    1: {
-      title: "Basic Greetings",
-      type: "vocabulary",
-      content: {
-        words: [
-          { czech: "dobrý", english: "good", audio: "/audio/dobry.mp3" },
-          { czech: "den", english: "day", audio: "/audio/den.mp3" },
-          { czech: "ahoj", english: "hello", audio: "/audio/ahoj.mp3" },
-        ],
+  // Fetch lesson with all related data from database
+  const lesson = await prisma.lesson.findUnique({
+    where: { id: parseInt(lessonId) },
+    include: {
+      unit: {
+        include: {
+          course: true,
+        },
+      },
+      parts: {
+        orderBy: { order: "asc" },
+      },
+      flashcards: {
+        orderBy: { order: "asc" },
+      },
+      exercises: {
+        orderBy: { order: "asc" },
       },
     },
-    2: {
-      title: "Numbers 1-10",
-      type: "vocabulary",
-      content: {
-        words: [
-          { czech: "jeden", english: "one", audio: "/audio/jeden.mp3" },
-          { czech: "dva", english: "two", audio: "/audio/dva.mp3" },
-          { czech: "tři", english: "three", audio: "/audio/tri.mp3" },
-        ],
-      },
-    },
-    3: {
-      title: "Present Tense",
-      type: "grammar",
-      content: {
-        dialogue: [
-          {
-            speaker: "A",
-            czech: "Ahoj! Jak se máš?",
-            english: "Hi! How are you?",
-          },
-          {
-            speaker: "B",
-            czech: "Ahoj! Mám se dobře.",
-            english: "Hi! I'm fine.",
-          },
-        ],
-      },
-    },
-  };
+  });
 
-  const lesson =
-    lessonData[lessonId as keyof typeof lessonData] || lessonData[1];
+  if (!lesson) {
+    notFound();
+  }
 
   return (
     <div className="space-y-6">
       {/* Lesson Header */}
-      <div className="text-center py-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">
-          {lesson.title}
-        </h1>
-        <p className="text-gray-600">
-          Unit {unitId} • Lesson {lessonId}
-        </p>
+      <PageHeader
+        title={lesson.title}
+        subtitle={
+          lesson.description || "Learn new vocabulary and practice exercises"
+        }
+      />
+
+      {/* Lesson Information */}
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-800">
+              {lesson.title}
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">{lesson.description}</p>
+          </div>
+          <div className="text-right">
+            <div className="text-sm text-gray-500">Difficulty</div>
+            <div className="text-lg font-bold text-blue-600">
+              {Array.from({ length: lesson.difficulty }, (_, i) => "★").join(
+                ""
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-4 gap-4 text-center">
+          <div className="bg-blue-50 rounded-lg p-3">
+            <div className="text-xl font-bold text-blue-600">
+              {lesson.parts.length}
+            </div>
+            <div className="text-xs text-blue-500">Parts</div>
+          </div>
+          <div className="bg-green-50 rounded-lg p-3">
+            <div className="text-xl font-bold text-green-600">
+              {lesson.flashcards.length}
+            </div>
+            <div className="text-xs text-green-500">Flashcards</div>
+          </div>
+          <div className="bg-purple-50 rounded-lg p-3">
+            <div className="text-xl font-bold text-purple-600">
+              {lesson.exercises.length}
+            </div>
+            <div className="text-xs text-purple-500">Exercises</div>
+          </div>
+          <div className="bg-orange-50 rounded-lg p-3">
+            <div className="text-xl font-bold text-orange-600">
+              {lesson.estimatedTime || 0}
+            </div>
+            <div className="text-xs text-orange-500">Minutes</div>
+          </div>
+        </div>
       </div>
 
-      {/* Lesson Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {/* Vocabulary Panel */}
-        {lesson.type === "vocabulary" && (
-          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Vocabulary</h2>
+      {/* Lesson Parts */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-800">Lesson Content</h3>
+        {lesson.parts.map((part: any, index: number) => (
+          <Card key={part.id}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">
+                  {part.order}
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-800">{part.title}</h4>
+                  <span className="text-sm text-gray-500 capitalize">
+                    {part.type.toLowerCase()}
+                  </span>
+                </div>
+              </div>
+              {part.duration && (
+                <span className="text-sm text-gray-500">{part.duration}s</span>
+              )}
+            </div>
 
-            <div className="space-y-4">
-              {lesson.content.words?.map((word, index) => (
+            {part.type === "TEXT" && part.content && (
+              <div className="prose prose-sm max-w-none">
                 <div
-                  key={index}
-                  className="bg-gray-50 rounded-lg p-6 text-center"
-                >
-                  <div className="text-2xl font-bold text-gray-800 mb-2">
-                    {word.czech}
-                  </div>
-                  <div className="text-sm text-gray-600 mb-4">
-                    {word.english}
-                  </div>
-                  <button className="bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center hover:bg-blue-700 transition-colors mx-auto">
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      (part.content as any)?.markdown?.replace(/\n/g, "<br>") ||
+                      "",
+                  }}
+                />
+              </div>
+            )}
+
+            {part.type === "AUDIO" && part.audioUrl && (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                     <svg
-                      className="w-5 h-5"
+                      className="w-6 h-6 text-blue-600"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
                       <path
                         fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                        d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.793L4.617 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.617l3.766-3.793a1 1 0 011.617.793zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z"
                         clipRule="evenodd"
                       />
                     </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-800">
+                      Audio Content
+                    </p>
+                    <p className="text-xs text-gray-500">Click to play</p>
+                  </div>
+                  <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    Play
                   </button>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
 
-            <button className="w-full mt-6 bg-white border-2 border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-50 transition-colors">
-              Next
-            </button>
-          </div>
-        )}
+            {part.type === "VIDEO" && part.videoUrl && (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                    <svg
+                      className="w-6 h-6 text-red-600"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-800">
+                      Video Content
+                    </p>
+                    <p className="text-xs text-gray-500">Click to watch</p>
+                  </div>
+                  <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                    Watch
+                  </button>
+                </div>
+              </div>
+            )}
 
-        {/* Grammar/Dialogue Panel */}
-        {lesson.type === "grammar" && (
-          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">
-              Text & Audio
-            </h2>
+            {part.type === "FLASHCARD_LIST" && (
+              <div className="bg-green-50 rounded-lg p-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg
+                      className="w-6 h-6 text-green-600"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-800">
+                      Flashcard Practice
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {lesson.flashcards.length} cards available
+                    </p>
+                  </div>
+                  <Button variant="primary" size="sm">
+                    Practice
+                  </Button>
+                </div>
+              </div>
+            )}
 
-            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-              {lesson.content.dialogue?.map((line, index) => (
-                <div key={index} className="text-sm">
-                  <span
-                    className={`font-medium ${
-                      line.speaker === "A" ? "text-blue-600" : "text-green-600"
-                    }`}
-                  >
-                    {line.speaker}:
-                  </span>{" "}
-                  {line.czech}
-                  <div className="text-xs text-gray-500 mt-1">
-                    {line.english}
+            {part.type === "EXERCISE" && (
+              <div className="bg-purple-50 rounded-lg p-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                    <svg
+                      className="w-6 h-6 text-purple-600"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-800">
+                      Exercises
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {lesson.exercises.length} exercises available
+                    </p>
+                  </div>
+                  <Button variant="primary" size="sm">
+                    Start
+                  </Button>
+                </div>
+              </div>
+            )}
+          </Card>
+        ))}
+      </div>
+
+      {/* Flashcards Preview */}
+      {lesson.flashcards.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-800">
+            Vocabulary Cards
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {lesson.flashcards.slice(0, 6).map((flashcard: any) => (
+              <Card key={flashcard.id}>
+                <div className="text-center">
+                  <div className="text-lg font-bold text-gray-800 mb-2">
+                    {flashcard.frontText}
+                  </div>
+                  <div className="text-sm text-gray-600 mb-3">
+                    {flashcard.backText}
+                  </div>
+                  {flashcard.example && (
+                    <div className="text-xs text-gray-500 italic">
+                      {flashcard.example}
+                    </div>
+                  )}
+                  <div className="flex items-center justify-center mt-3 space-x-2">
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                      {flashcard.category}
+                    </span>
+                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                      Level {flashcard.difficulty}
+                    </span>
                   </div>
                 </div>
-              ))}
-
-              <button className="bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-blue-700 transition-colors mt-4">
-                <svg
-                  className="w-4 h-4"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <button className="w-full mt-6 bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors">
-              Continue
-            </button>
+              </Card>
+            ))}
           </div>
-        )}
-
-        {/* Progress Panel */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Progress</h2>
-
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-700">This Lesson</span>
-                <span className="text-sm font-medium text-blue-600">75%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-blue-600 h-2 rounded-full"
-                  style={{ width: "75%" }}
-                ></div>
-              </div>
+          {lesson.flashcards.length > 6 && (
+            <div className="text-center">
+              <Button variant="outline">
+                View All {lesson.flashcards.length} Cards
+              </Button>
             </div>
-
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-700">Unit {unitId}</span>
-                <span className="text-sm font-medium text-green-600">60%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-green-600 h-2 rounded-full"
-                  style={{ width: "60%" }}
-                ></div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6 space-y-2">
-            <a
-              href={`/units/${unitId}`}
-              className="block w-full bg-white border-2 border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-50 transition-colors text-center"
-            >
-              Back to Unit
-            </a>
-            <a
-              href="/"
-              className="block w-full bg-gray-100 text-gray-600 py-2 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors text-center"
-            >
-              Dashboard
-            </a>
-          </div>
+          )}
         </div>
+      )}
+
+      {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <Button
+          href={`/units/${unitId}/lessons/${lessonId}/practice`}
+          variant="primary"
+          size="lg"
+          className="flex-1"
+        >
+          Start Practice
+        </Button>
+        <Button
+          href={`/units/${unitId}`}
+          variant="outline"
+          size="lg"
+          className="flex-1"
+        >
+          Back to Unit
+        </Button>
       </div>
     </div>
   );

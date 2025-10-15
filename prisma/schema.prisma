@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,90 +8,306 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  role      String   @default("user") // "user" veya "admin"
-  createdAt DateTime @default(now())
-  progresses FlashcardProgress[]
-  exercises  ExerciseResult[]
+  id              Int                 @id @default(autoincrement())
+  email           String              @unique
+  name            String?
+  avatar          String?
+  role            UserRole            @default(USER)
+  level           Int                 @default(1)
+  streak          Int                 @default(0)
+  totalXP         Int                 @default(0)
+  lastActiveAt    DateTime            @default(now())
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  exerciseResults ExerciseResult[]
+  progresses      FlashcardProgress[]
+  sessions        StudySession[]
+  achievements    UserAchievement[]
+  preferences     UserPreferences?
+
+  @@map("users")
+}
+
+model UserPreferences {
+  id            Int      @id @default(autoincrement())
+  userId        Int      @unique
+  language      String   @default("en")
+  theme         String   @default("light")
+  soundEnabled  Boolean  @default(true)
+  notifications Boolean  @default(true)
+  dailyGoal     Int      @default(10)
+  srsEnabled    Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model Achievement {
+  id               Int               @id @default(autoincrement())
+  name             String            @unique
+  description      String
+  icon             String
+  category         String
+  requirement      Json
+  xpReward         Int               @default(0)
+  isActive         Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  userAchievements UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id            Int         @id @default(autoincrement())
+  userId        Int
+  achievementId Int
+  unlockedAt    DateTime    @default(now())
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@index([achievementId], map: "user_achievements_achievementId_fkey")
+  @@map("user_achievements")
+}
+
+model Courses {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  level       Int      @default(1)
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  thumbnail   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  units       Unit[]
+
+  @@map("courses")
 }
 
 model Unit {
-  id          String   @id @default(cuid())
+  id          Int      @id @default(autoincrement())
+  courseId    Int?
   title       String
   order       Int
   description String?
+  level       Int      @default(1)
+  isActive    Boolean  @default(true)
+  thumbnail   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   lessons     Lesson[]
+  course      Courses?  @relation(fields: [courseId], references: [id])
+
+  @@index([courseId], map: "units_courseId_fkey")
+  @@map("units")
 }
 
 model Lesson {
-  id          String      @id @default(cuid())
-  unitId      String
-  title       String
-  order       Int
-  description String?
-  parts       LessonPart[]
-  flashcards  Flashcard[]
-  exercises   Exercise[]
-  unit        Unit        @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  id            Int            @id @default(autoincrement())
+  unitId        Int
+  title         String
+  order         Int
+  description   String?
+  type          LessonType     @default(VOCABULARY)
+  difficulty    Int            @default(1)
+  estimatedTime Int?
+  isActive      Boolean        @default(true)
+  thumbnail     String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  exercises     Exercise[]
+  flashcards    Flashcard[]
+  parts         LessonPart[]
+  unit          Unit           @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  sessions      StudySession[]
+
+  @@index([unitId], map: "lessons_unitId_fkey")
+  @@map("lessons")
 }
 
 model LessonPart {
-  id        String  @id @default(cuid())
-  lessonId  String
+  id        Int      @id @default(autoincrement())
+  lessonId  Int
   order     Int
-  type      String  // 'text' | 'audio' | 'flashcard_list' | 'exercise'
-  content   Json?   // markdown or structured JSON
-  audioUrl  String? // '/uploads/...' path
-  lesson    Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  type      PartType
+  title     String?
+  content   Json?
+  audioUrl  String?
+  videoUrl  String?
+  duration  Int?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId], map: "lesson_parts_lessonId_fkey")
+  @@map("lesson_parts")
 }
 
 model Flashcard {
-  id        String  @id @default(cuid())
-  lessonId  String
-  order     Int
-  frontText String
-  backText  String
-  audioUrl  String?
-  example   String?
-  lesson    Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  id         Int                 @id @default(autoincrement())
+  lessonId   Int
+  order      Int
+  frontText  String
+  backText   String
+  audioUrl   String?
+  imageUrl   String?
+  example    String?
+  difficulty Int                 @default(1)
+  category   String?
+  tags       Json?
+  isActive   Boolean             @default(true)
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
   progresses FlashcardProgress[]
+  lesson     Lesson              @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId], map: "flashcards_lessonId_fkey")
+  @@map("flashcards")
 }
 
 model FlashcardProgress {
-  id          String   @id @default(cuid())
-  userId      String
-  flashcardId String
-  box         Int      @default(1) // Leitner box 1..5
-  lastSeen    DateTime?
-  nextDue     DateTime?
-  correctCount Int     @default(0)
-  wrongCount   Int     @default(0)
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  flashcard   Flashcard @relation(fields: [flashcardId], references: [id], onDelete: Cascade)
+  id            Int       @id @default(autoincrement())
+  userId        Int
+  flashcardId   Int
+  box           Int       @default(1)
+  lastSeen      DateTime?
+  nextDue       DateTime?
+  correctCount  Int       @default(0)
+  wrongCount    Int       @default(0)
+  streak        Int       @default(0)
+  totalTime     Int       @default(0)
+  lastStudyTime Int?
+  isMastered    Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  flashcard     Flashcard @relation(fields: [flashcardId], references: [id], onDelete: Cascade)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, flashcardId])
+  @@index([flashcardId], map: "flashcard_progress_flashcardId_fkey")
+  @@map("flashcard_progress")
 }
 
 model Exercise {
-  id        String   @id @default(cuid())
-  lessonId  String
-  order     Int
-  type      String   // 'mcq' | 'fill'
-  question  String
-  options   Json?    // mcq -> [{text, correct}]
-  answer    String?  // fill -> correct answer
-  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  results   ExerciseResult[]
+  id          Int              @id @default(autoincrement())
+  lessonId    Int
+  order       Int
+  type        ExerciseType
+  question    String
+  options     Json?
+  answer      String?
+  explanation String?
+  audioUrl    String?
+  imageUrl    String?
+  difficulty  Int              @default(1)
+  timeLimit   Int?
+  points      Int              @default(1)
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  results     ExerciseResult[]
+  lesson      Lesson           @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId], map: "exercises_lessonId_fkey")
+  @@map("exercises")
 }
 
 model ExerciseResult {
-  id         String   @id @default(cuid())
-  userId     String
-  exerciseId String
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  exerciseId Int
   correct    Boolean
+  answer     String?
+  timeSpent  Int?
+  points     Int      @default(0)
   createdAt  DateTime @default(now())
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([exerciseId], map: "exercise_results_exerciseId_fkey")
+  @@index([userId], map: "exercise_results_userId_fkey")
+  @@map("exercise_results")
+}
+
+model StudySession {
+  id                 Int       @id @default(autoincrement())
+  userId             Int
+  lessonId           Int
+  type               String    @default("lesson")
+  startTime          DateTime  @default(now())
+  endTime            DateTime?
+  duration           Int?
+  flashcardsStudied  Int       @default(0)
+  exercisesCompleted Int       @default(0)
+  correctAnswers     Int       @default(0)
+  totalAnswers       Int       @default(0)
+  xpEarned           Int       @default(0)
+  isCompleted        Boolean   @default(false)
+  lesson             Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId], map: "study_sessions_lessonId_fkey")
+  @@index([userId], map: "study_sessions_userId_fkey")
+  @@map("study_sessions")
+}
+
+model UserStats {
+  id              Int       @id @default(autoincrement())
+  userId          Int       @unique
+  totalStudyTime  Int       @default(0)
+  totalFlashcards Int       @default(0)
+  totalExercises  Int       @default(0)
+  correctAnswers  Int       @default(0)
+  totalAnswers    Int       @default(0)
+  longestStreak   Int       @default(0)
+  currentStreak   Int       @default(0)
+  lastStudyDate   DateTime?
+  weeklyGoal      Int       @default(50)
+  weeklyProgress  Int       @default(0)
+  level           Int       @default(1)
+  xp              Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("user_stats")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  TEACHER
+  MODERATOR
+}
+
+enum LessonType {
+  VOCABULARY
+  GRAMMAR
+  CONVERSATION
+  PRONUNCIATION
+  CULTURE
+  MIXED
+}
+
+enum PartType {
+  TEXT
+  AUDIO
+  VIDEO
+  FLASHCARD_LIST
+  EXERCISE
+  QUIZ
+  INTERACTIVE
+}
+
+enum ExerciseType {
+  MCQ
+  FILL
+  MATCHING
+  LISTENING
+  SPEAKING
+  TRANSLATION
+  ORDERING
 }

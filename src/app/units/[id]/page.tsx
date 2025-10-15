@@ -1,50 +1,115 @@
-export default async function UnitPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id: unitId } = await params;
+import PageHeader from "@/components/PageHeader";
+import Card from "@/components/Card";
+import ProgressBar from "@/components/ProgressBar";
+import Button from "@/components/Button";
+import { prisma } from "@/lib/prisma";
+import { notFound } from "next/navigation";
 
-  // Mock lessons data - later this will come from a database
-  const lessons = [
-    { id: 1, title: "Basic Greetings", progress: 100, type: "vocabulary" },
-    { id: 2, title: "Numbers 1-10", progress: 80, type: "vocabulary" },
-    { id: 3, title: "Present Tense", progress: 60, type: "grammar" },
-    { id: 4, title: "Family Members", progress: 40, type: "vocabulary" },
-    { id: 5, title: "Daily Activities", progress: 20, type: "conversation" },
-  ];
+export default async function UnitPage({ params }: { params: { id: string } }) {
+  const { id: unitId } = params;
+
+  // Fetch unit with lessons from database
+  const unit = await prisma.unit.findUnique({
+    where: { id: parseInt(unitId) },
+    include: {
+      course: true,
+      lessons: {
+        include: {
+          flashcards: true,
+          exercises: true,
+        },
+        orderBy: { order: "asc" },
+      },
+    },
+  });
+
+  if (!unit) {
+    notFound();
+  }
+
+  // Calculate lesson progress (mock for now - later will be based on user progress)
+  const lessonsWithProgress = unit.lessons.map((lesson: any) => ({
+    ...lesson,
+    progress: Math.floor(Math.random() * 100), // Mock progress
+  }));
 
   return (
     <div className="space-y-6">
       {/* Unit Header */}
-      <div className="text-center py-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Unit {unitId}</h1>
-        <p className="text-gray-600">
-          Choose a lesson to continue your learning journey
-        </p>
+      <PageHeader
+        title={unit.title}
+        subtitle={
+          unit.description ||
+          "Choose a lesson to continue your learning journey"
+        }
+      />
+
+      {/* Unit Information */}
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-800">
+              {unit.title}
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">{unit.description}</p>
+          </div>
+          <div className="text-right">
+            <div className="text-sm text-gray-500">Level</div>
+            <div className="text-lg font-bold text-blue-600">{unit.level}</div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="bg-blue-50 rounded-lg p-3">
+            <div className="text-xl font-bold text-blue-600">
+              {unit.lessons.length}
+            </div>
+            <div className="text-xs text-blue-500">Lessons</div>
+          </div>
+          <div className="bg-green-50 rounded-lg p-3">
+            <div className="text-xl font-bold text-green-600">
+              {unit.lessons.reduce(
+                (sum: number, lesson: any) => sum + lesson.flashcards.length,
+                0
+              )}
+            </div>
+            <div className="text-xs text-green-500">Flashcards</div>
+          </div>
+          <div className="bg-purple-50 rounded-lg p-3">
+            <div className="text-xl font-bold text-purple-600">
+              {unit.lessons.reduce(
+                (sum: number, lesson: any) => sum + lesson.exercises.length,
+                0
+              )}
+            </div>
+            <div className="text-xs text-purple-500">Exercises</div>
+          </div>
+        </div>
       </div>
 
       {/* Lessons Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-        {lessons.map((lesson) => (
-          <a
-            key={lesson.id}
-            href={`/units/${unitId}/lessons/${lesson.id}`}
-            className="bg-white rounded-xl shadow-lg p-4 sm:p-6 hover:shadow-xl transition-shadow duration-300"
-          >
+        {lessonsWithProgress.map((lesson: any) => (
+          <Card key={lesson.id} href={`/units/${unitId}/lessons/${lesson.id}`}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
                 <div
                   className={`w-3 h-3 rounded-full ${
-                    lesson.type === "vocabulary"
+                    lesson.type === "VOCABULARY"
                       ? "bg-blue-500"
-                      : lesson.type === "grammar"
+                      : lesson.type === "GRAMMAR"
                       ? "bg-green-500"
-                      : "bg-purple-500"
+                      : lesson.type === "CONVERSATION"
+                      ? "bg-purple-500"
+                      : lesson.type === "PRONUNCIATION"
+                      ? "bg-orange-500"
+                      : lesson.type === "CULTURE"
+                      ? "bg-pink-500"
+                      : "bg-gray-500"
                   }`}
                 ></div>
                 <span className="text-sm font-medium text-gray-600 capitalize">
-                  {lesson.type}
+                  {lesson.type.toLowerCase()}
                 </span>
               </div>
               <span className="text-sm font-medium text-blue-600">
@@ -56,15 +121,28 @@ export default async function UnitPage({
               {lesson.title}
             </h3>
 
-            <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-              <div
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${lesson.progress}%` }}
-              ></div>
-            </div>
+            {lesson.description && (
+              <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                {lesson.description}
+              </p>
+            )}
+
+            <ProgressBar
+              label=""
+              percentage={lesson.progress}
+              color="blue"
+              showPercentage={false}
+              className="mb-4"
+            />
 
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">Lesson {lesson.id}</span>
+              <div className="flex items-center space-x-4 text-xs text-gray-500">
+                <span>{lesson.flashcards.length} cards</span>
+                <span>{lesson.exercises.length} exercises</span>
+                {lesson.estimatedTime && (
+                  <span>{lesson.estimatedTime} min</span>
+                )}
+              </div>
               <svg
                 className="w-5 h-5 text-gray-400"
                 fill="none"
@@ -79,16 +157,13 @@ export default async function UnitPage({
                 />
               </svg>
             </div>
-          </a>
+          </Card>
         ))}
       </div>
 
       {/* Back Button */}
       <div className="text-center">
-        <a
-          href="/"
-          className="inline-flex items-center px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-        >
+        <Button href="/" variant="outline" className="inline-flex items-center">
           <svg
             className="w-5 h-5 mr-2"
             fill="none"
@@ -103,7 +178,7 @@ export default async function UnitPage({
             />
           </svg>
           Back to Dashboard
-        </a>
+        </Button>
       </div>
     </div>
   );
