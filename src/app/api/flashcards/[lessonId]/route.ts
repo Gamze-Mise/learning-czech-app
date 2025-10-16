@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: { lessonId: string } }
 ) {
   try {
-    const { lessonId } = params;
+    const { lessonId } = await params;
 
     const flashcards = await prisma.flashcard.findMany({
       where: {

@@ -1,6 +1,7 @@
 import PageHeader from "@/components/PageHeader";
 import Card from "@/components/Card";
 import ProgressBar from "@/components/ProgressBar";
+import Button from "@/components/Button";
 
 export default function DashboardPage() {
   return (
@@ -35,7 +36,7 @@ export default function DashboardPage() {
             <ProgressBar
               label="Speaking Practice"
               percentage={45}
-              color="orange"
+              color="purple"
             />
           </div>
         </Card>
@@ -108,20 +109,29 @@ export default function DashboardPage() {
       <Card>
         <h2 className="text-xl font-bold text-gray-800 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-left">
+          <Button
+            href="/units/1/lessons/1/practice"
+            className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-left"
+          >
             <h3 className="font-semibold text-blue-800">Continue Learning</h3>
             <p className="text-sm text-blue-600">Resume your current lesson</p>
-          </button>
-          <button className="p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors text-left">
+          </Button>
+          <Button
+            href="/units/1/lessons/1/flashcards"
+            className="p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors text-left"
+          >
             <h3 className="font-semibold text-green-800">Review Flashcards</h3>
             <p className="text-sm text-green-600">
               Practice with spaced repetition
             </p>
-          </button>
-          <button className="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors text-left">
+          </Button>
+          <Button
+            href="/units/1/lessons/1/exercises"
+            className="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors text-left"
+          >
             <h3 className="font-semibold text-purple-800">Take Quiz</h3>
             <p className="text-sm text-purple-600">Test your knowledge</p>
-          </button>
+          </Button>
         </div>
       </Card>
     </div>

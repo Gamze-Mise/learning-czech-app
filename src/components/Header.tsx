@@ -1,40 +1,42 @@
+import Link from "next/link";
+
 export default function Header() {
   return (
     <header className="bg-blue-600 text-white shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo and Title */}
-          <div className="flex items-center space-x-2">
+          <Link href="/" className="flex items-center space-x-2">
             <span className="text-2xl">🇨🇿</span>
             <h1 className="text-lg sm:text-xl font-bold">Learning Czech</h1>
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
-            <a
+            <Link
               href="/"
               className="hover:text-blue-200 transition-colors duration-200 font-medium"
             >
               Home
-            </a>
-            <a
+            </Link>
+            <Link
               href="/dashboard"
               className="hover:text-blue-200 transition-colors duration-200 font-medium"
             >
               Dashboard
-            </a>
-            <a
-              href="/units/1"
+            </Link>
+            <Link
+              href="/units"
               className="hover:text-blue-200 transition-colors duration-200 font-medium"
             >
               Units
-            </a>
-            <a
+            </Link>
+            <Link
               href="/admin"
               className="hover:text-blue-200 transition-colors duration-200 font-medium"
             >
               Admin
-            </a>
+            </Link>
           </nav>
 
           {/* Mobile Menu Button */}

@@ -1,40 +1,77 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import Card from "@/components/Card";
 import ProgressBar from "@/components/ProgressBar";
 import Button from "@/components/Button";
-import { prisma } from "@/lib/prisma";
-import { notFound } from "next/navigation";
 
-export default async function LessonPage({
-  params,
-}: {
-  params: { id: string; lessonId: string };
-}) {
+export default function LessonPage() {
+  const params = useParams();
   const { id: unitId, lessonId } = params;
 
-  // Fetch lesson with all related data from database
-  const lesson = await prisma.lesson.findUnique({
-    where: { id: parseInt(lessonId) },
-    include: {
-      unit: {
-        include: {
-          course: true,
-        },
-      },
-      parts: {
-        orderBy: { order: "asc" },
-      },
-      flashcards: {
-        orderBy: { order: "asc" },
-      },
-      exercises: {
-        orderBy: { order: "asc" },
-      },
-    },
-  });
+  const [lesson, setLesson] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchLesson();
+  }, [lessonId]);
+
+  const fetchLesson = async () => {
+    try {
+      const response = await fetch(`/api/lessons/${lessonId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setLesson(data);
+      }
+    } catch (error) {
+      console.error("Error fetching lesson:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const playAudio = (audioUrl: string) => {
+    if (audioUrl) {
+      // For demo purposes, show alert. In production, replace with actual audio files
+      if (audioUrl.includes("/uploads/")) {
+        alert(
+          `🎵 Audio would play: ${audioUrl}\n\n(Demo mode - audio files not yet uploaded)`
+        );
+      } else {
+        const audio = new Audio(audioUrl);
+        audio.play().catch((error) => {
+          console.error("Audio play failed:", error);
+          alert(`🎵 Audio file not found: ${audioUrl}`);
+        });
+      }
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Loading..."
+          subtitle="Please wait while we load the lesson"
+        />
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
 
   if (!lesson) {
-    notFound();
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Lesson Not Found"
+          subtitle="The lesson you're looking for doesn't exist"
+        />
+      </div>
+    );
   }
 
   return (
@@ -105,8 +142,8 @@ export default async function LessonPage({
                   {part.order}
                 </div>
                 <div>
-                  <h4 className="font-semibold text-gray-800">{part.title}</h4>
-                  <span className="text-sm text-gray-500 capitalize">
+                  <h4 className="font-bold text-gray-900">{part.title}</h4>
+                  <span className="text-sm text-gray-700 capitalize font-medium">
                     {part.type.toLowerCase()}
                   </span>
                 </div>
@@ -117,8 +154,9 @@ export default async function LessonPage({
             </div>
 
             {part.type === "TEXT" && part.content && (
-              <div className="prose prose-sm max-w-none">
+              <div className="prose prose-sm max-w-none text-gray-900">
                 <div
+                  className="text-gray-900 leading-relaxed"
                   dangerouslySetInnerHTML={{
                     __html:
                       (part.content as any)?.markdown?.replace(/\n/g, "<br>") ||
@@ -145,12 +183,15 @@ export default async function LessonPage({
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-800">
+                    <p className="text-sm font-bold text-gray-900">
                       Audio Content
                     </p>
-                    <p className="text-xs text-gray-500">Click to play</p>
+                    <p className="text-xs text-gray-700">Click to play</p>
                   </div>
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                  <button
+                    onClick={() => playAudio(part.audioUrl)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
                     Play
                   </button>
                 </div>
@@ -170,10 +211,10 @@ export default async function LessonPage({
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-800">
+                    <p className="text-sm font-bold text-gray-900">
                       Video Content
                     </p>
-                    <p className="text-xs text-gray-500">Click to watch</p>
+                    <p className="text-xs text-gray-700">Click to watch</p>
                   </div>
                   <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
                     Watch
@@ -202,7 +243,11 @@ export default async function LessonPage({
                       {lesson.flashcards.length} cards available
                     </p>
                   </div>
-                  <Button variant="primary" size="sm">
+                  <Button
+                    href={`/units/${unitId}/lessons/${lessonId}/flashcards`}
+                    variant="primary"
+                    size="sm"
+                  >
                     Practice
                   </Button>
                 </div>
@@ -233,7 +278,11 @@ export default async function LessonPage({
                       {lesson.exercises.length} exercises available
                     </p>
                   </div>
-                  <Button variant="primary" size="sm">
+                  <Button
+                    href={`/units/${unitId}/lessons/${lessonId}/exercises`}
+                    variant="primary"
+                    size="sm"
+                  >
                     Start
                   </Button>
                 </div>
@@ -253,14 +302,14 @@ export default async function LessonPage({
             {lesson.flashcards.slice(0, 6).map((flashcard: any) => (
               <Card key={flashcard.id}>
                 <div className="text-center">
-                  <div className="text-lg font-bold text-gray-800 mb-2">
+                  <div className="text-lg font-bold text-gray-900 mb-2">
                     {flashcard.frontText}
                   </div>
-                  <div className="text-sm text-gray-600 mb-3">
+                  <div className="text-sm text-gray-800 mb-3 font-medium">
                     {flashcard.backText}
                   </div>
                   {flashcard.example && (
-                    <div className="text-xs text-gray-500 italic">
+                    <div className="text-xs text-gray-700 italic">
                       {flashcard.example}
                     </div>
                   )}
