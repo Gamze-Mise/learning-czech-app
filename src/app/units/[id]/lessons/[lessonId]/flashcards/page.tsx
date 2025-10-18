@@ -170,6 +170,9 @@ export default function FlashcardsPage() {
                         src={currentCard.imageUrl}
                         alt="Flashcard"
                         className="w-32 h-32 object-cover rounded-lg mx-auto mb-4"
+                        onError={(e) => {
+                          e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Crect width='128' height='128' fill='%23e5e7eb'/%3E%3Ctext x='64' y='64' text-anchor='middle' dy='0.3em' font-family='Arial' font-size='14' fill='%23374151'%3EImage%3C/text%3E%3C/svg%3E";
+                        }}
                       />
                     )}
                   </div>
