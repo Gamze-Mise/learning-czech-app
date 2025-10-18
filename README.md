@@ -1,24 +1,25 @@
 # 🇨🇿 Czech Learning App
 
-A comprehensive Czech language learning application built with Next.js 15, TypeScript, and Tailwind CSS. This interactive platform helps users master Czech through structured lessons, flashcards, and engaging exercises with a complete spaced repetition system.
+A comprehensive Czech language learning application built with Next.js 15, TypeScript, and Tailwind CSS. This interactive platform helps users master Czech through structured lessons, flashcards, and engaging exercises with real-time progress tracking and dynamic content delivery.
 
 ## ✨ Current Features
 
 ### 📚 Complete Learning System
 
-- **Structured Course**: Full Unit 1 "Basic Greetings" with 4 comprehensive lessons
-- **Interactive Lessons**: Text content, audio pronunciation, video materials, and vocabulary
-- **Flashcard System**: Spaced repetition algorithm with difficulty-based scheduling
+- **3 Full Units**: Basic Greetings, Numbers & Time, Family & Relationships (21 lessons total)
+- **Interactive Lessons**: Rich content with audio, images, and vocabulary practice
+- **Smart Flashcard System**: Dynamic image rotation with audio pronunciation
 - **Exercise Types**: Multiple choice, fill-in-the-blank, and interactive matching exercises
-- **Progress Tracking**: Visual progress indicators and completion tracking
+- **Real-time Progress**: Dynamic progress tracking with lesson completion flow
+- **Continue Learning**: Smart resume functionality to pick up where you left off
 
 ### 🎯 Interactive Learning Tools
 
-- **Smart Flashcards**: SRS-based learning with automatic difficulty adjustment
-- **Diverse Exercises**: MCQ, fill-in-the-blank, and drag-and-drop matching
-- **Audio Integration**: Native speaker pronunciation with playback controls
-- **Seamless Navigation**: Automatic progression through exercises and lessons
-- **Completion Tracking**: Full lesson and unit completion system
+- **Smart Flashcards**: 4 rotating sample images with beep audio for pronunciation
+- **Flexible Exercise Validation**: Accepts answers ignoring case, accents, and minor spelling differences
+- **Audio Integration**: Generated beep sounds for pronunciation practice
+- **Seamless Navigation**: Automatic progression to next exercise/lesson upon completion
+- **Dashboard Analytics**: Real-time statistics showing vocabulary mastery and grammar progress
 
 ### 📱 User Experience
 
@@ -32,7 +33,7 @@ A comprehensive Czech language learning application built with Next.js 15, TypeS
 - **Framework**: Next.js 15 with App Router
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
-- **Database**: SQLite with Prisma ORM
+- **Database**: PostgreSQL (Neon) with Prisma ORM
 - **State Management**: React Hooks (useState, useEffect)
 - **Audio**: HTML5 Audio API
 - **Deployment Ready**: Vercel-optimized configuration
@@ -59,7 +60,17 @@ cd learning-czech-app
 npm install
 ```
 
-3. **Set up the database:**
+3. **Set up environment variables:**
+
+```bash
+# Copy environment template
+cp env.example .env.local
+
+# Add your database URL (PostgreSQL/Neon)
+# DATABASE_URL="your-postgresql-connection-string"
+```
+
+4. **Set up the database:**
 
 ```bash
 # Generate Prisma client
@@ -69,10 +80,10 @@ npx prisma generate
 npx prisma migrate dev
 
 # Seed the database with Czech course data
-node prisma/seed.js
+npx prisma db seed
 ```
 
-4. **Start the development server:**
+5. **Start the development server:**
 
 ```bash
 npm run dev
@@ -171,20 +182,43 @@ learning-czech-app/
 
 ### 🎓 Learning Content
 
-**Unit 1: Basic Greetings**
+**Unit 1: Basic Greetings and Introductions**
 
-- Lesson 1: Hello and Goodbye (Ahoj, Na shledanou)
-- Lesson 2: Please and Thank You (Prosím, Děkuji)
-- Lesson 3: Yes and No (Ano, Ne)
-- Lesson 4: Excuse Me (Promiňte)
+- 1.1 Hello and Goodbye (Ahoj, Na shledanou)
+- 1.2 Introducing Yourself (Jmenuji se...)
+- 1.3 How Are You? (Jak se máš?)
+- 1.4 Please and Thank You (Prosím, Děkuji)
+- 1.5 Excuse Me and Sorry (Promiňte, Omlouvám se)
+- 1.6 Meeting People (Těší mě)
+- 1.7 Formal vs Informal Speech
+
+**Unit 2: Numbers, Time and Dates**
+
+- 2.1 Numbers 1-10
+- 2.2 Numbers 11-20
+- 2.3 Numbers 21-100
+- 2.4 Telling Time - Hours
+- 2.5 Telling Time - Minutes
+- 2.6 Days of the Week
+- 2.7 Months and Seasons
+- 2.8 Dates and Birthdays
+
+**Unit 3: Family, People and Relationships**
+
+- 3.1 Family Members
+- 3.2 Extended Family
+- 3.3 Physical Appearance
+- 3.4 Personality Traits
+- 3.5 Relationships and Friends
+- 3.6 Family Activities
 
 **Total Content:**
 
-- 4 Complete Lessons
-- 20+ Flashcards with SRS
-- 12+ Interactive Exercises
-- Audio Pronunciation
-- Cultural Context
+- 21 Complete Lessons across 3 units
+- 50+ Flashcards with dynamic images and audio
+- 100+ Interactive Exercises (MCQ, Fill-in, Matching)
+- Sample audio pronunciation (beep sounds)
+- Progress tracking and analytics
 
 ## 🚀 Deployment
 

@@ -4,7 +4,7 @@ import Card from "@/components/Card";
 import Button from "@/components/Button";
 
 interface PracticePageProps {
-  params: { id: string; lessonId: string };
+  params: Promise<{ id: string; lessonId: string }>;
 }
 
 export default async function PracticePage({ params }: PracticePageProps) {

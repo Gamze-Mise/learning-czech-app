@@ -1,7 +1,7 @@
 interface ProgressBarProps {
   label: string;
   percentage: number;
-  color?: "blue" | "green" | "purple";
+  color?: "blue" | "green" | "purple" | "orange" | "gray";
   showPercentage?: boolean;
   className?: string;
 }
@@ -17,12 +17,16 @@ export default function ProgressBar({
     blue: "bg-blue-600",
     green: "bg-green-600",
     purple: "bg-purple-600",
+    orange: "bg-orange-600",
+    gray: "bg-gray-600",
   };
 
   const textColorClasses = {
     blue: "text-blue-600",
     green: "text-green-600",
     purple: "text-purple-600",
+    orange: "text-orange-600",
+    gray: "text-gray-600",
   };
 
   return (

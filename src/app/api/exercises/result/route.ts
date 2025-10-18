@@ -25,82 +25,55 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const pointsEarned = correct ? exercise.points : 0;
+    // Calculate points based on correctness and difficulty
+    const points = correct ? exercise.points : 0;
 
-    // Create exercise result
+    // Save exercise result
     const result = await prisma.exerciseResult.create({
       data: {
-        userId,
-        exerciseId,
+        userId: parseInt(userId),
+        exerciseId: parseInt(exerciseId),
         correct,
-        answer,
-        timeSpent,
-        points: pointsEarned,
+        answer: answer || null,
+        timeSpent: timeSpent || null,
+        points,
       },
     });
 
-    // Update user XP
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
-        totalXP: {
-          increment: pointsEarned,
-        },
+    // Update user stats
+    await prisma.userStats.upsert({
+      where: { userId: parseInt(userId) },
+      update: {
+        totalAnswers: { increment: 1 },
+        correctAnswers: correct ? { increment: 1 } : undefined,
+        xp: { increment: points },
+        updatedAt: new Date(),
+      },
+      create: {
+        userId: parseInt(userId),
+        totalAnswers: 1,
+        correctAnswers: correct ? 1 : 0,
+        xp: points,
+        totalExercises: 0,
+        totalFlashcards: 0,
+        currentStreak: 0,
+        longestStreak: 0,
+        totalStudyTime: 0,
+        level: 1,
+        weeklyGoal: 50,
+        weeklyProgress: 0,
       },
     });
 
     return NextResponse.json({
       success: true,
       result,
-      pointsEarned,
+      pointsEarned: points,
     });
   } catch (error) {
     console.error("Error saving exercise result:", error);
     return NextResponse.json(
       { error: "Failed to save result" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
-    const lessonId = searchParams.get("lessonId");
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: "User ID is required" },
-        { status: 400 }
-      );
-    }
-
-    let whereClause: any = { userId };
-
-    if (lessonId) {
-      whereClause.exercise = {
-        lessonId: lessonId,
-      };
-    }
-
-    const results = await prisma.exerciseResult.findMany({
-      where: whereClause,
-      include: {
-        exercise: {
-          include: {
-            lesson: true,
-          },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
-
-    return NextResponse.json({ results });
-  } catch (error) {
-    console.error("Error fetching exercise results:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch results" },
       { status: 500 }
     );
   }

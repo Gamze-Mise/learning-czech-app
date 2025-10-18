@@ -35,7 +35,7 @@ The Czech Learning App is a comprehensive language learning platform designed to
 
 - **Runtime**: Node.js
 - **API**: Next.js API Routes
-- **Database**: SQLite (development) / MySQL (production)
+- **Database**: PostgreSQL (Neon)
 - **ORM**: Prisma
 - **Authentication**: NextAuth.js (planned)
 

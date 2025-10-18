@@ -1,295 +1,247 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import PageHeader from "@/components/PageHeader";
 import Card from "@/components/Card";
-import ProgressBar from "@/components/ProgressBar";
 import Button from "@/components/Button";
-import { prisma } from "@/lib/prisma";
 
-export default async function Home() {
-  // Fetch courses and units from database
-  const courses = await prisma.courses.findMany({
-    include: {
-      units: {
-        include: {
-          lessons: {
-            include: {
-              flashcards: true,
-              exercises: true,
-            },
-          },
-        },
-        orderBy: { order: "asc" },
-      },
-    },
-    orderBy: { order: "asc" },
-  });
+export default function Home() {
+  const [courses, setCourses] = useState<any[]>([]);
+  const [userProgress, setUserProgress] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Calculate progress statistics
-  const totalUnits = courses.reduce(
-    (sum: number, course: any) => sum + course.units.length,
-    0
-  );
-  const totalLessons = courses.reduce(
-    (sum: number, course: any) =>
-      sum +
-      course.units.reduce(
-        (unitSum: number, unit: any) => unitSum + unit.lessons.length,
-        0
-      ),
-    0
-  );
-  const totalFlashcards = courses.reduce(
-    (sum: number, course: any) =>
-      sum +
-      course.units.reduce(
-        (unitSum: number, unit: any) =>
-          unitSum +
-          unit.lessons.reduce(
-            (lessonSum: number, lesson: any) =>
-              lessonSum + lesson.flashcards.length,
-            0
-          ),
-        0
-      ),
-    0
-  );
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  // Get first course and its first unit for recommendations
+  const fetchData = async () => {
+    try {
+      // Fetch user progress (assuming userId 1 for now)
+      const progressResponse = await fetch("/api/users/progress?userId=1");
+      const progressData = await progressResponse.json();
+      setUserProgress(progressData);
+
+      // Fetch courses with units and lessons
+      const coursesResponse = await fetch("/api/courses");
+      const coursesData = await coursesResponse.json();
+      setCourses(coursesData.courses || []);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="text-gray-600 mt-4">Loading your progress...</p>
+      </div>
+    );
+  }
+
+  // Get first unit and lesson dynamically
   const firstCourse = courses[0];
   const firstUnit = firstCourse?.units[0];
   const firstLesson = firstUnit?.lessons[0];
 
-  // Calculate real progress (Unit 1 is complete, others are not)
-  const completedUnits = 1; // Only Unit 1 is complete
-  const completedLessons = firstUnit?.lessons.length || 0; // All lessons in Unit 1
-  const completedFlashcards =
-    firstUnit?.lessons.reduce(
-      (sum: number, lesson: any) => sum + lesson.flashcards.length,
-      0
-    ) || 0;
+  // Determine continue learning link
+  const continueLearningLink = userProgress?.lastIncompleteLesson
+    ? `/units/${userProgress.lastIncompleteLesson.unitId}/lessons/${userProgress.lastIncompleteLesson.id}`
+    : firstLesson
+    ? `/units/${firstUnit.id}/lessons/${firstLesson.id}`
+    : "/units";
 
-  // Calculate percentages
-  const unitsProgress =
-    totalUnits > 0 ? Math.round((completedUnits / totalUnits) * 100) : 0;
-  const lessonsProgress =
-    totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
-  const flashcardsProgress =
-    totalFlashcards > 0
-      ? Math.round((completedFlashcards / totalFlashcards) * 100)
-      : 0;
+  // Determine start learning link
+  const startLearningLink = firstLesson
+    ? `/units/${firstUnit.id}/lessons/${firstLesson.id}`
+    : "/units";
+
+  // Determine flashcards link
+  const flashcardsLink = firstLesson
+    ? `/units/${firstUnit.id}/lessons/${firstLesson.id}/flashcards`
+    : "/units";
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Section */}
+    <div className="space-y-8">
+      {/* Hero Section */}
       <PageHeader
-        title="🇨🇿 Welcome to Czech Learning"
-        subtitle="Start your journey to master the Czech language - Begin with Unit 1!"
-        className="py-8"
+        title="Learn Czech Language"
+        subtitle="Master Czech with interactive lessons, flashcards, and exercises"
+        className="text-center py-12"
       />
 
-      {/* Quick Start Section */}
-      {firstUnit && firstLesson && (
+      {/* Continue Learning Section - Show if user has progress */}
+      {userProgress?.stats && userProgress.stats.lessonsCompleted > 0 ? (
+        <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">Continue Learning</h2>
+              <p className="text-blue-100 mb-2">
+                You've completed {userProgress.stats.lessonsCompleted} lessons.
+                Keep going!
+              </p>
+              {userProgress.lastIncompleteLesson && (
+                <p className="text-sm text-blue-200">
+                  Next: {userProgress.lastIncompleteLesson.title}
+                </p>
+              )}
+            </div>
+            <div className="text-right">
+              <div className="text-sm text-blue-200 mb-2">
+                {userProgress.stats.xp} XP •{" "}
+                {userProgress.stats.lessonsCompleted} lessons
+              </div>
+              <Button
+                href={continueLearningLink}
+                variant="secondary"
+                size="lg"
+                className="!bg-white !text-blue-700 hover:!bg-blue-50 !font-bold !border-2 !border-white shadow-lg"
+              >
+                Continue Learning →
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        // Quick Start Section - Show if user has no progress
         <div className="bg-gradient-to-r from-green-500 to-blue-600 rounded-xl p-6 text-white text-center">
           <h2 className="text-2xl font-bold mb-2">Ready to Start Learning?</h2>
           <p className="text-green-100 mb-4">
-            Unit 1 "Basic Greetings" is complete and ready for you!
+            {firstUnit
+              ? `${firstUnit.title} is ready for you!`
+              : "Start your Czech learning journey!"}
           </p>
           <Button
-            href={`/units/${firstUnit.id}/lessons/${firstLesson.id}/practice`}
+            href={startLearningLink}
             variant="outline"
             size="lg"
             className="!bg-white !text-green-800 hover:!bg-green-50 !font-bold !border-2 !border-white shadow-lg !text-lg"
           >
-            Start Unit 1 - Hello and Goodbye
+            {firstLesson ? `Start ${firstLesson.title}` : "Start Learning"}
           </Button>
         </div>
       )}
 
       {/* Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Dashboard - Progress Panel */}
-        <Card>
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Dashboard</h2>
-
-          {/* Progress Section */}
-          <div className="mb-6">
-            <h3 className="text-sm font-semibold text-gray-600 mb-3">
-              Progress Overview
+        {/* Quick Start */}
+        {firstLesson && (
+          <Card className="p-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">
+              Quick Start
             </h3>
-            <div className="space-y-3">
-              <ProgressBar
-                label="Courses"
-                percentage={courses.length > 0 ? 100 : 0}
-                color="blue"
-              />
-              <ProgressBar
-                label="Units"
-                percentage={unitsProgress}
-                color="green"
-              />
-              <ProgressBar
-                label="Lessons"
-                percentage={lessonsProgress}
-                color="purple"
-              />
-            </div>
-          </div>
-
-          {/* Statistics */}
-          <div className="mb-6">
-            <h3 className="text-sm font-semibold text-gray-600 mb-3">
-              Statistics
-            </h3>
-            <div className="grid grid-cols-2 gap-4 text-center">
-              <div className="bg-blue-50 rounded-lg p-3">
-                <div className="text-2xl font-bold text-blue-600">
-                  {totalFlashcards}
-                </div>
-                <div className="text-xs text-blue-500">Flashcards</div>
-              </div>
-              <div className="bg-green-50 rounded-lg p-3">
-                <div className="text-2xl font-bold text-green-600">
-                  {totalLessons}
-                </div>
-                <div className="text-xs text-green-500">Lessons</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Units Section */}
-          <div className="mb-6">
-            <h3 className="text-sm font-semibold text-gray-600 mb-3">
-              Available Units
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              {firstCourse?.units
-                .slice(0, 4)
-                .map((unit: any, index: number) => (
-                  <a
-                    key={unit.id}
-                    href={`/units/${unit.id}`}
-                    className={`p-3 rounded-lg text-center text-sm font-medium transition-colors border-2 ${
-                      index === 0
-                        ? "bg-green-100 text-green-700 border-green-300 hover:bg-green-200"
-                        : "bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-200"
-                    }`}
-                  >
-                    {unit.title}
-                    {index === 0 && (
-                      <div className="text-xs text-green-600 mt-1">✓ Ready</div>
-                    )}
-                  </a>
-                ))}
-            </div>
-          </div>
-
-          {firstUnit && (
+            <p className="text-gray-600 mb-4">
+              Jump right into the first lesson: {firstLesson.title}
+            </p>
             <Button
-              href={`/units/${firstUnit.id}`}
-              variant="outline"
-              className="w-full"
-            >
-              Review Flashcards
-            </Button>
-          )}
-        </Card>
-
-        {/* Dashboard - Recommended Panel */}
-        <Card>
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Recommended</h2>
-
-          {/* Course Information */}
-          {firstCourse && (
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-gray-600 mb-3">
-                Current Course
-              </h3>
-              <div className="bg-blue-50 rounded-lg p-4">
-                <h4 className="font-semibold text-blue-800">
-                  {firstCourse.title}
-                </h4>
-                <p className="text-sm text-blue-600 mt-1">
-                  {firstCourse.description}
-                </p>
-                <div className="flex items-center mt-2">
-                  <span className="text-xs bg-blue-200 text-blue-700 px-2 py-1 rounded">
-                    Level {firstCourse.level}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Recommended Lessons */}
-          <div className="mb-6">
-            <h3 className="text-sm font-semibold text-gray-600 mb-3">
-              Start Learning - Unit 1 Ready!
-            </h3>
-            <div className="space-y-3">
-              {firstUnit && firstLesson && (
-                <a
-                  href={`/units/${firstUnit.id}/lessons/${firstLesson.id}/practice`}
-                  className="block bg-green-50 rounded-lg p-3 hover:bg-green-100 transition-colors border-2 border-green-200"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm text-green-800 font-medium">
-                      {firstLesson.title}
-                    </p>
-                    <span className="text-xs bg-green-300 text-green-800 px-2 py-1 rounded-full">
-                      🎯 Complete
-                    </span>
-                  </div>
-                  <p className="text-xs text-green-600">
-                    {firstLesson.description}
-                  </p>
-                  <div className="flex items-center mt-2 space-x-2">
-                    <span className="text-xs bg-green-200 text-green-700 px-2 py-1 rounded">
-                      {firstLesson.type}
-                    </span>
-                    <span className="text-xs text-green-500">
-                      {firstLesson.estimatedTime} min
-                    </span>
-                    <span className="text-xs text-green-500">📹 Video</span>
-                    <span className="text-xs text-green-500">🎵 Audio</span>
-                  </div>
-                </a>
-              )}
-
-              {firstUnit?.lessons[1] && (
-                <a
-                  href={`/units/${firstUnit.id}/lessons/${firstUnit.lessons[1].id}`}
-                  className="block bg-purple-50 rounded-lg p-3 hover:bg-purple-100 transition-colors"
-                >
-                  <p className="text-sm text-purple-800 font-medium">
-                    {firstUnit.lessons[1].title}
-                  </p>
-                  <p className="text-xs text-purple-600">
-                    {firstUnit.lessons[1].description}
-                  </p>
-                  <div className="flex items-center mt-2 space-x-2">
-                    <span className="text-xs bg-purple-200 text-purple-700 px-2 py-1 rounded">
-                      {firstUnit.lessons[1].type}
-                    </span>
-                    <span className="text-xs text-purple-500">
-                      {firstUnit.lessons[1].estimatedTime} min
-                    </span>
-                  </div>
-                </a>
-              )}
-            </div>
-          </div>
-
-          {firstUnit && firstLesson && (
-            <Button
-              href={`/units/${firstUnit.id}/lessons/${firstLesson.id}/practice`}
+              href={startLearningLink}
               variant="primary"
               size="lg"
               className="w-full"
             >
               Start Learning
             </Button>
-          )}
-        </Card>
+          </Card>
+        )}
+
+        {/* Your Progress */}
+        {userProgress?.stats && (
+          <Card className="p-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">
+              Your Progress
+            </h3>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-700">Lessons Completed:</span>
+                <span className="font-semibold text-blue-600">
+                  {userProgress.stats.lessonsCompleted}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-700">Total XP:</span>
+                <span className="font-semibold text-purple-600">
+                  {userProgress.stats.xp} XP
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-700">Current Streak:</span>
+                <span className="font-semibold text-green-600">
+                  {userProgress.stats.currentStreak} days
+                </span>
+              </div>
+            </div>
+            <div className="mt-6">
+              <Button href="/dashboard" variant="secondary" className="w-full">
+                View Full Dashboard
+              </Button>
+            </div>
+          </Card>
+        )}
       </div>
+
+      {/* Recommended Section */}
+      <Card>
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          Recommended for You
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="text-center p-4 bg-blue-50 rounded-lg">
+            <div className="text-2xl mb-2">👋</div>
+            <h4 className="font-medium text-gray-800 mb-1">Basic Greetings</h4>
+            <p className="text-sm text-gray-600 mb-3">
+              Learn essential Czech greetings
+            </p>
+            <Button
+              href={firstUnit ? `/units/${firstUnit.id}` : "/units"}
+              variant="primary"
+              size="sm"
+            >
+              Start Learning
+            </Button>
+          </div>
+          <div className="text-center p-4 bg-purple-50 rounded-lg">
+            <div className="text-2xl mb-2">🎴</div>
+            <h4 className="font-medium text-gray-800 mb-1">Flashcards</h4>
+            <p className="text-sm text-gray-600 mb-3">
+              Review vocabulary cards
+            </p>
+            <Button href={flashcardsLink} variant="primary" size="sm">
+              Review Cards
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      {/* Recommended Lessons */}
+      {courses.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-xl font-bold text-gray-800">Available Lessons</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {courses[0]?.units
+              .flatMap((unit: any) => unit.lessons)
+              .slice(0, 6)
+              .map((lesson: any) => (
+                <Card key={lesson.id} className="p-4">
+                  <h4 className="font-bold text-gray-900 mb-2">
+                    {lesson.title}
+                  </h4>
+                  <p className="text-sm text-gray-700 mb-3">
+                    {lesson.description}
+                  </p>
+                  <Button
+                    href={`/units/${lesson.unitId}/lessons/${lesson.id}`}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Start Lesson
+                  </Button>
+                </Card>
+              ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

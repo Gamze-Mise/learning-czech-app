@@ -93,6 +93,38 @@ export default function ExercisePage() {
     }
   };
 
+  // Helper function to normalize text for comparison (remove accents, case-insensitive)
+  const normalizeText = (text: string): string => {
+    return text
+      .toLowerCase()
+      .trim()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // Remove diacritics/accents
+      .replace(/[^\w\s]/g, ""); // Remove punctuation
+  };
+
+  // Helper function to check if answers are similar enough
+  const isAnswerAcceptable = (
+    userAnswer: string,
+    correctAnswer: string
+  ): boolean => {
+    const normalizedUser = normalizeText(userAnswer);
+    const normalizedCorrect = normalizeText(correctAnswer);
+
+    // Exact match after normalization
+    if (normalizedUser === normalizedCorrect) {
+      return true;
+    }
+
+    // Check for common variations (optional)
+    const variations = [
+      normalizedCorrect.replace(/\s+/g, ""), // Remove spaces
+      normalizedCorrect.replace(/\s+/g, " "), // Normalize spaces
+    ];
+
+    return variations.some((variation) => normalizedUser === variation);
+  };
+
   const handleSubmit = () => {
     if (!exercise) return;
 
@@ -107,10 +139,9 @@ export default function ExercisePage() {
       correctAnswer = correctOption?.text || "";
       correct = selectedAnswer === correctAnswer;
     } else if (exercise.type === "FILL") {
-      // For FILL, use the answer field
+      // For FILL, use the answer field with flexible matching
       correctAnswer = exercise.answer || "";
-      correct =
-        userAnswer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
+      correct = isAnswerAcceptable(userAnswer, correctAnswer);
     } else if (exercise.type === "MATCHING") {
       // For MATCHING, check if all pairs are correctly matched
       const correctPairs = exercise.options.length;
@@ -130,6 +161,44 @@ export default function ExercisePage() {
 
     setIsCorrect(correct);
     setShowResult(true);
+
+    // Save exercise result to database
+    saveExerciseResult(correct, correctAnswer);
+  };
+
+  const saveExerciseResult = async (correct: boolean, answer: string) => {
+    try {
+      const response = await fetch("/api/exercises/result", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: 1, // Default user for now
+          exerciseId: exercise?.id,
+          correct,
+          answer: exercise?.type === "FILL" ? userAnswer : selectedAnswer,
+          timeSpent: exercise?.timeLimit
+            ? exercise.timeLimit - (timeLeft || 0)
+            : null,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("✅ Exercise result saved:", result);
+      } else {
+        const errorText = await response.text();
+        console.error(
+          "❌ Failed to save exercise result:",
+          response.status,
+          response.statusText,
+          errorText
+        );
+      }
+    } catch (error) {
+      console.error("❌ Error saving exercise result:", error);
+    }
   };
 
   const handleNext = () => {
@@ -349,16 +418,15 @@ export default function ExercisePage() {
                                     <span className="text-sm text-green-800 font-semibold">
                                       → {matchingPairs[leftItem]}
                                     </span>
-                                    <button
-                                      type="button"
+                                    <div
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         removePair(leftItem);
                                       }}
-                                      className="text-red-500 hover:text-red-700 text-sm"
+                                      className="text-red-500 hover:text-red-700 text-sm cursor-pointer"
                                     >
                                       ✕
-                                    </button>
+                                    </div>
                                   </div>
                                 )}
                               </div>
@@ -490,6 +558,20 @@ export default function ExercisePage() {
                         : exercise.answer}
                     </span>
                   </div>
+                  {/* Show reminder for FILL exercises when answer is accepted but not exactly correct */}
+                  {exercise.type === "FILL" &&
+                    isCorrect &&
+                    userAnswer.trim() !== exercise.answer && (
+                      <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                        <span className="font-medium text-blue-700">
+                          💡 Remember:{" "}
+                        </span>
+                        <span className="text-blue-800">
+                          The correct spelling is "{exercise.answer}" (with
+                          proper capitalization and accents)
+                        </span>
+                      </div>
+                    )}
                   {exercise.explanation && (
                     <div>
                       <span className="font-medium text-gray-700">

@@ -3,10 +3,10 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { lessonId: string } }
+  context: { params: Promise<{ lessonId: string }> }
 ) {
   try {
-    const { lessonId } = await params;
+    const { lessonId } = await context.params;
 
     const exercises = await prisma.exercise.findMany({
       where: {

@@ -43,6 +43,11 @@ next-env.d.ts
 /src/generated/prisma
 /public/images/flashcards
 /public/uploads
-/public/i
+/prisma/seed.js
+/prisma/full-content-seed.js
+/prisma/comprehensive-seed.js
+/prisma/migrations
+/prisma/complete-exercises-flashcards.js
+
 
 
