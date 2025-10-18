@@ -1,0 +1,7 @@
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" fill="#10B981" rx="10"/>
+  <polygon points="100,50 130,90 70,90" fill="#FFFFFF"/>
+  <rect x="80" y="110" width="40" height="30" fill="#FFFFFF" rx="3"/>
+  <circle cx="100" cy="160" r="15" fill="#FFFFFF"/>
+  <text x="100" y="190" text-anchor="middle" fill="#FFFFFF" font-family="Arial" font-size="14" font-weight="bold">Flashcard 2</text>
+</svg>

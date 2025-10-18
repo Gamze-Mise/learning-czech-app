@@ -41,7 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
-/public/images/flashcards
+# /public/images/flashcards
 /public/uploads
 /prisma/seed.js
 /prisma/full-content-seed.js
