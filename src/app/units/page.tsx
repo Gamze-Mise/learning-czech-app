@@ -37,7 +37,7 @@ export default async function UnitsPage() {
       {/* Units Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {units.map((unit, index) => {
-          const isFirstUnit = index === 0;
+          const isActive = unit.isActive;
           const totalLessons = unit.lessons.length;
           const totalFlashcards = unit.lessons.reduce(
             (sum: number, lesson: any) => sum + lesson.flashcards.length,
@@ -49,23 +49,27 @@ export default async function UnitsPage() {
           );
 
           return (
-            <Card key={unit.id}>
+            <Card key={unit.id} className={!isActive ? "opacity-75" : ""}>
               <div className="text-center">
                 <div className="mb-4">
                   <div
                     className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 ${
-                      isFirstUnit ? "bg-green-100" : "bg-blue-100"
+                      isActive ? "bg-green-100" : "bg-gray-100"
                     }`}
                   >
                     <span
                       className={`text-2xl font-bold ${
-                        isFirstUnit ? "text-green-600" : "text-blue-600"
+                        isActive ? "text-green-600" : "text-gray-400"
                       }`}
                     >
                       {unit.order}
                     </span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">
+                  <h3
+                    className={`text-xl font-bold mb-2 ${
+                      isActive ? "text-gray-800" : "text-gray-500"
+                    }`}
+                  >
                     {unit.title}
                   </h3>
                   <p className="text-gray-600 text-sm mb-4">
@@ -76,37 +80,53 @@ export default async function UnitsPage() {
                 {/* Unit Stats */}
                 <div className="grid grid-cols-3 gap-2 mb-4 text-center">
                   <div className="bg-gray-50 rounded-lg p-2">
-                    <div className="text-lg font-bold text-gray-700">
-                      {totalLessons}
+                    <div
+                      className={`text-lg font-bold ${
+                        isActive ? "text-gray-700" : "text-gray-400"
+                      }`}
+                    >
+                      {isActive ? totalLessons : "?"}
                     </div>
                     <div className="text-xs text-gray-500">Lessons</div>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-2">
-                    <div className="text-lg font-bold text-gray-700">
-                      {totalFlashcards}
+                    <div
+                      className={`text-lg font-bold ${
+                        isActive ? "text-gray-700" : "text-gray-400"
+                      }`}
+                    >
+                      {isActive ? totalFlashcards : "?"}
                     </div>
                     <div className="text-xs text-gray-500">Cards</div>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-2">
-                    <div className="text-lg font-bold text-gray-700">
-                      {totalExercises}
+                    <div
+                      className={`text-lg font-bold ${
+                        isActive ? "text-gray-700" : "text-gray-400"
+                      }`}
+                    >
+                      {isActive ? totalExercises : "?"}
                     </div>
                     <div className="text-xs text-gray-500">Exercises</div>
                   </div>
                 </div>
 
                 {/* Status Badge */}
-                {isFirstUnit && (
-                  <div className="mb-4">
+                <div className="mb-4">
+                  {isActive ? (
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                      ✓ Ready to Start
+                      ✓ Available Now
                     </span>
-                  </div>
-                )}
+                  ) : (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                      🚧 Coming Soon
+                    </span>
+                  )}
+                </div>
 
                 {/* Action Buttons */}
                 <div className="space-y-2">
-                  {isFirstUnit ? (
+                  {isActive ? (
                     <>
                       <Button
                         href={`/units/${unit.id}/lessons/${unit.lessons[0]?.id}/practice`}
@@ -125,16 +145,12 @@ export default async function UnitsPage() {
                     </>
                   ) : (
                     <div className="text-center">
-                      <div className="text-sm text-gray-500 mb-2">
-                        Coming Soon
-                      </div>
                       <Button
-                        href={`/units/${unit.id}`}
                         variant="outline"
                         className="w-full opacity-50 cursor-not-allowed"
                         disabled
                       >
-                        View Unit
+                        Coming Soon
                       </Button>
                     </div>
                   )}

@@ -6,137 +6,152 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const userId = parseInt(searchParams.get("userId") || "1");
 
-    // Get user stats
-    const userStats = await prisma.userStats.findUnique({
-      where: { userId },
-    });
+    // Use Promise.all to run queries in parallel for better performance
+    const [
+      userStats,
+      totalCounts,
+      completedSessions,
+      exerciseResults,
+      recentExercises,
+    ] = await Promise.all([
+      // Get user stats
+      prisma.userStats.findUnique({
+        where: { userId },
+      }),
 
-    // Get total lessons available
-    const totalLessons = await prisma.lesson.count();
+      // Get all totals in one aggregation query
+      prisma.$transaction([
+        prisma.lesson.count({ where: { isActive: true } }),
+        prisma.flashcard.count({ where: { isActive: true } }),
+        prisma.exercise.count({ where: { isActive: true } }),
+        prisma.lesson.count({ where: { type: "VOCABULARY", isActive: true } }),
+        prisma.lesson.count({ where: { type: "GRAMMAR", isActive: true } }),
+      ]),
 
-    // Get total flashcards available
-    const totalFlashcards = await prisma.flashcard.count();
-
-    // Get total exercises available
-    const totalExercises = await prisma.exercise.count();
-
-    // Get completed study sessions
-    const completedSessions = await prisma.studySession.findMany({
-      where: {
-        userId,
-        isCompleted: true,
-      },
-      include: {
-        lesson: {
-          include: {
-            unit: true,
+      // Get completed study sessions (limit to recent ones for performance)
+      prisma.studySession.findMany({
+        where: {
+          userId,
+          isCompleted: true,
+        },
+        include: {
+          lesson: {
+            select: {
+              id: true,
+              title: true,
+              type: true,
+              unit: {
+                select: {
+                  id: true,
+                  title: true,
+                },
+              },
+            },
           },
         },
-      },
-      orderBy: {
-        endTime: "desc",
-      },
-    });
+        orderBy: {
+          endTime: "desc",
+        },
+        take: 50, // Limit for performance
+      }),
 
-    // Get exercise results for accuracy calculation
-    const exerciseResults = await prisma.exerciseResult.findMany({
-      where: { userId },
-    });
+      // Get exercise results with aggregation
+      prisma.exerciseResult.groupBy({
+        by: ["correct"],
+        where: { userId },
+        _count: {
+          correct: true,
+        },
+      }),
 
-    // Calculate lessons completed from study sessions (since lessonsCompleted might not be updated)
+      // Get recent exercises for activity
+      prisma.exerciseResult.findMany({
+        where: { userId },
+        include: {
+          exercise: {
+            select: {
+              id: true,
+              lesson: {
+                select: {
+                  id: true,
+                  title: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 3,
+      }),
+    ]);
+
+    const [
+      totalLessons,
+      totalFlashcards,
+      totalExercises,
+      vocabularyLessons,
+      grammarLessons,
+    ] = totalCounts;
+
+    // Calculate stats from aggregated data
     const lessonsCompleted = completedSessions.length;
     const overallProgress =
       totalLessons > 0
         ? Math.round((lessonsCompleted / totalLessons) * 100)
         : 0;
 
-    // Calculate vocabulary mastery based on exercise results (simplified)
-    const vocabularyExercises = await prisma.exercise.count({
-      where: {
-        lesson: {
-          type: "VOCABULARY",
-        },
-      },
-    });
-    const correctVocabularyAnswers = await prisma.exerciseResult.count({
-      where: {
-        userId,
-        correct: true,
-        exercise: {
-          lesson: {
-            type: "VOCABULARY",
-          },
-        },
-      },
-    });
-    const vocabularyMastery =
-      vocabularyExercises > 0
-        ? Math.round((correctVocabularyAnswers / vocabularyExercises) * 100)
-        : 0;
+    // Calculate accuracy from grouped results
+    const totalAnswers = exerciseResults.reduce(
+      (sum, group) => sum + group._count.correct,
+      0
+    );
+    const correctAnswers =
+      exerciseResults.find((group) => group.correct)?._count.correct || 0;
+    const averageScore =
+      totalAnswers > 0 ? Math.round((correctAnswers / totalAnswers) * 100) : 0;
 
-    // Calculate grammar understanding (lessons completed vs total)
-    const grammarLessons = await prisma.lesson.count({
-      where: { type: "GRAMMAR" },
-    });
+    // Calculate lesson type completion
+    const completedVocabularyLessons = completedSessions.filter(
+      (session) => session.lesson.type === "VOCABULARY"
+    ).length;
     const completedGrammarLessons = completedSessions.filter(
       (session) => session.lesson.type === "GRAMMAR"
     ).length;
+
+    const vocabularyMastery =
+      vocabularyLessons > 0
+        ? Math.round((completedVocabularyLessons / vocabularyLessons) * 100)
+        : 0;
     const grammarUnderstanding =
       grammarLessons > 0
         ? Math.round((completedGrammarLessons / grammarLessons) * 100)
         : 0;
 
-    // Speaking practice removed - not implemented yet
-
-    // Calculate average score
-    const totalAnswers = exerciseResults.length;
-    const correctAnswers = exerciseResults.filter(
-      (result) => result.correct
-    ).length;
-    const averageScore =
-      totalAnswers > 0 ? Math.round((correctAnswers / totalAnswers) * 100) : 0;
-
-    // Recent activity (last 5 sessions)
-    const recentActivity = completedSessions.slice(0, 5).map((session) => ({
-      id: session.id,
-      type: "lesson",
-      title: `Completed ${session.lesson.title}`,
-      timestamp: session.endTime,
-      xpEarned: session.xpEarned,
-    }));
-
-    // Add recent exercise completions as activity
-    const recentExercises = await prisma.exerciseResult.findMany({
-      where: { userId },
-      include: {
-        exercise: {
-          include: {
-            lesson: true,
-          },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 3,
-    });
-
-    recentExercises.forEach((result) => {
-      recentActivity.push({
+    // Build recent activity efficiently
+    const recentActivity = [
+      ...completedSessions.slice(0, 5).map((session) => ({
+        id: session.id,
+        type: "lesson" as const,
+        title: `Completed ${session.lesson.title}`,
+        timestamp: session.endTime,
+        xpEarned: session.xpEarned,
+      })),
+      ...recentExercises.map((result) => ({
         id: result.id,
-        type: "exercise",
+        type: "exercise" as const,
         title: `${result.correct ? "Completed" : "Attempted"} exercise in ${
           result.exercise.lesson.title
         }`,
         timestamp: result.createdAt,
         xpEarned: result.points,
-      });
-    });
-
-    // Sort recent activity by timestamp
-    recentActivity.sort((a, b) => {
-      const dateA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-      const dateB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-      return dateB - dateA;
-    });
+      })),
+    ]
+      .sort((a, b) => {
+        const dateA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+        const dateB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+        return dateB - dateA;
+      })
+      .slice(0, 5);
 
     return NextResponse.json({
       success: true,
@@ -149,8 +164,7 @@ export async function GET(request: NextRequest) {
         // Statistics cards
         lessonsCompleted,
         flashcardsMastered: Math.round(
-          (correctVocabularyAnswers / Math.max(totalFlashcards, 1)) *
-            totalFlashcards
+          (correctAnswers / Math.max(totalFlashcards, 1)) * 100
         ),
         averageScore,
         currentStreak: userStats?.currentStreak || 0,
@@ -166,7 +180,7 @@ export async function GET(request: NextRequest) {
         longestStreak: userStats?.longestStreak || 0,
 
         // Recent activity
-        recentActivity: recentActivity.slice(0, 5),
+        recentActivity,
       },
     });
   } catch (error) {
