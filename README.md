@@ -1,260 +1,117 @@
 # 🇨🇿 Czech Learning App
 
-A comprehensive Czech language learning application built with Next.js 15, TypeScript, and Tailwind CSS. This interactive platform helps users master Czech through structured lessons, flashcards, and engaging exercises with real-time progress tracking and dynamic content delivery.
+**Modern, full-stack language learning platform** built with Next.js 15 and TypeScript. Features interactive lessons, smart flashcards, and comprehensive progress tracking - deployed to production with real users.
 
-## ✨ Current Features
+**🚀 Live Demo:** [https://learning-czech-app.vercel.app/](https://learning-czech-app.vercel.app/)
 
-### 📚 Complete Learning System
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![Vercel](https://img.shields.io/badge/Deployed-Vercel-black?style=flat-square&logo=vercel)](https://learning-czech-app.vercel.app/)
 
-- **3 Full Units**: Basic Greetings, Numbers & Time, Family & Relationships (21 lessons total)
-- **Interactive Lessons**: Rich content with audio, images, and vocabulary practice
-- **Smart Flashcard System**: Dynamic image rotation with audio pronunciation
-- **Exercise Types**: Multiple choice, fill-in-the-blank, and interactive matching exercises
-- **Real-time Progress**: Dynamic progress tracking with lesson completion flow
-- **Continue Learning**: Smart resume functionality to pick up where you left off
+## 🎯 Key Features & Highlights
 
-### 🎯 Interactive Learning Tools
+- **21 Complete Interactive Lessons** organized in 3 comprehensive learning units
+- **Smart Flashcard System** with spaced repetition algorithm for optimal retention
+- **Multiple Exercise Types**: Multiple choice, fill-in-the-blank, and matching games
+- **Real-time Progress Tracking** with XP system, learning streaks, and detailed analytics
+- **Responsive Design** optimized for desktop, tablet, and mobile devices
+- **Production-Ready** with PostgreSQL database and serverless deployment
 
-- **Smart Flashcards**: 4 rotating sample images with beep audio for pronunciation
-- **Flexible Exercise Validation**: Accepts answers ignoring case, accents, and minor spelling differences
-- **Audio Integration**: Generated beep sounds for pronunciation practice
-- **Seamless Navigation**: Automatic progression to next exercise/lesson upon completion
-- **Dashboard Analytics**: Real-time statistics showing vocabulary mastery and grammar progress
+## 📸 Application Screenshots
 
-### 📱 User Experience
+### 🏠 Dynamic Homepage with Progress Tracking
 
-- **Responsive Design**: Works perfectly on desktop, tablet, and mobile devices
-- **Modern UI**: Clean, intuitive interface with Tailwind CSS
-- **Real-time Feedback**: Instant exercise results and explanations
-- **Smooth Navigation**: Client-side routing with Next.js App Router
+![Homepage](https://private-user-images.githubusercontent.com/101412033/503185769-11eae1aa-8b4d-4d97-a4ec-8590c83871d8.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NjA5NjA4MDUsIm5iZiI6MTc2MDk2MDUwNSwicGF0aCI6Ii8xMDE0MTIwMzMvNTAzMTg1NzY5LTExZWFlMWFhLThiNGQtNGQ5Ny1hNGVjLTg1OTBjODM4NzFkOC5wbmc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUxMDIwJTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MTAyMFQxMTQxNDVaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT1hNjA4NjRmNDg1MzJjYTRjZjIyMGNiY2E5MGI3NTMyMThmMDc3OWUxOWNjNTdmODAwZjExMDk5ZGI4ODc3NDMyJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.RlmerMyL1e2qAOIqfojrN-qytJMenJufK_aEL0K-X1E)
 
-## 🛠️ Tech Stack
+_Smart "Continue Learning" functionality with personalized progress tracking and unit-based learning path_
 
-- **Framework**: Next.js 15 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Database**: PostgreSQL (Neon) with Prisma ORM
-- **State Management**: React Hooks (useState, useEffect)
-- **Audio**: HTML5 Audio API
-- **Deployment Ready**: Vercel-optimized configuration
+### 📚 Interactive Lesson Interface
 
-## 🚀 Getting Started
+![Lessons](https://private-user-images.githubusercontent.com/101412033/503186725-811c14e7-3159-4223-b19a-afc7fdd6bad0.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NjA5NjA4MDUsIm5iZiI6MTc2MDk2MDUwNSwicGF0aCI6Ii8xMDE0MTIwMzMvNTAzMTg2NzI1LTgxMWMxNGU3LTMxNTktNDIyMy1iMTlhLWFmYzdmZGQ2YmFkMC5wbmc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUxMDIwJTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MTAyMFQxMTQxNDVaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT05ZWU5ZTRiNjMzNjU5M2UwNWZjMGJjMDEyMGJhNDMxZmE5ZmZkNzQ3NGI4MjhlNGM5OTVjMThlMmJmYjg3ODVlJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.Y0xa50Hh00Ri8FRAnlJXNONQh5eT-NVM2quRQSKCiUM)
 
-### Prerequisites
+_Rich multimedia content with audio pronunciation, visual aids, and structured learning progression_
 
-- **Node.js 18+** (Download from [nodejs.org](https://nodejs.org/))
-- **npm** (comes with Node.js)
+### 🎴 Smart Flashcard System
 
-### Quick Start
+![Flashcards](https://private-user-images.githubusercontent.com/101412033/503186720-c52118ba-7ff2-4e7b-9918-8b61ccfba6ae.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NjA5NjA4MDUsIm5iZiI6MTc2MDk2MDUwNSwicGF0aCI6Ii8xMDE0MTIwMzMvNTAzMTg2NzIwLWM1MjExOGJhLTdmZjItNGU3Yi05OTE4LThiNjFjY2ZiYTZhZS5wbmc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUxMDIwJTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MTAyMFQxMTQxNDVaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0xNmFiMzg5YTIyYTJhYjYzZWE4ZjYwODRmNWNkODUwZTBlYjNlMDJhOWEyMDM2ZjI2OGQyNmQ4YWZkNWY2NjdlJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.Nv0YbOSr3LzXQorp_q2OnNOhA7az7kvhfiS652E3GnE)
 
-1. **Clone the repository:**
+_Interactive flashcards with spaced repetition algorithm, visual feedback, and audio pronunciation_
+
+### 🎯 Diverse Exercise System
+
+![Exercises](https://private-user-images.githubusercontent.com/101412033/503186723-931f2c4a-8fae-430c-b840-f4b3e5667b11.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NjA5NjA4MDUsIm5iZiI6MTc2MDk2MDUwNSwicGF0aCI6Ii8xMDE0MTIwMzMvNTAzMTg2NzIzLTkzMWYyYzRhLThmYWUtNDMwYy1iODQwLWY0YjNlNTY2N2IxMS5wbmc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUxMDIwJTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MTAyMFQxMTQxNDVaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0xMjkxNzNhYTY1MzhmZDI1ZjgxNzUxYWY0YTYyMDdiZDA3OWE5ODdmYmRlODdmYTBlMDNlMmZhNjEyYjhkMTg1JlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.2BZnfwRMyyc2_WMQG1WB0k4DEXxb1zu4biTQS0DEQqI)
+
+_Multiple exercise formats including multiple choice, fill-in-the-blank, and interactive matching games_
+
+### 📊 Comprehensive Analytics Dashboard
+
+![Dashboard](https://private-user-images.githubusercontent.com/101412033/503186724-d366c119-7c49-4c50-9b03-9e173dce381c.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NjA5NjA4MDUsIm5iZiI6MTc2MDk2MDUwNSwicGF0aCI6Ii8xMDE0MTIwMzMvNTAzMTg2NzI0LWQzNjZjMTE5LTdjNDktNGM1MC05YjAzLTllMTczZGNlMzgxYy5wbmc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUxMDIwJTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MTAyMFQxMTQxNDVaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT05YTU5YWU5MmQwMjhkMTlhZTFhMDE4MzIyNjA5MmQ3OTg0OWNmNDVlOGZlYzRiNmQ0MTQyOGI2MTNiNjI3ODExJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.nWQ_kHj9PyOfbaBn4Ksd2avvzVJeCwfgsGOT5YbeH8s)
+
+_Real-time learning analytics with detailed progress tracking, XP system, and performance insights_
+
+## 🛠️ Technical Implementation
+
+### **Frontend Architecture**
+
+- **Next.js 15** with App Router for modern React development
+- **TypeScript** for type-safe, maintainable code
+- **Tailwind CSS** for responsive, utility-first styling
+- **React Hooks** for efficient state management
+
+### **Backend & Database**
+
+- **Next.js API Routes** for serverless backend functionality
+- **Prisma ORM** for type-safe database operations
+- **PostgreSQL** (Neon) for production with automatic scaling
+- **SQLite** for local development environment
+
+### **Deployment & DevOps**
+
+- **Vercel** for seamless CI/CD and global edge deployment
+- **Git-based workflow** with automated deployments
+- **Environment-specific configurations** for dev/prod
+
+## 🚀 Quick Start
 
 ```bash
-git clone https://github.com/yourusername/learning-czech-app.git
+# Clone the repository
+git clone https://github.com/Gamze-Mise/learning-czech-app.git
 cd learning-czech-app
-```
 
-2. **Install dependencies:**
-
-```bash
+# Install dependencies
 npm install
-```
 
-3. **Set up environment variables:**
-
-```bash
-# Copy environment template
-cp env.example .env.local
-
-# Add your database URL (PostgreSQL/Neon)
-# DATABASE_URL="your-postgresql-connection-string"
-```
-
-4. **Set up the database:**
-
-```bash
-# Generate Prisma client
-npx prisma generate
-
-# Run database migrations
+# Set up database
 npx prisma migrate dev
-
-# Seed the database with Czech course data
 npx prisma db seed
-```
 
-5. **Start the development server:**
-
-```bash
+# Start development server
 npm run dev
 ```
 
-5. **Open your browser:**
-   Navigate to [http://localhost:3000](http://localhost:3000) to start learning Czech!
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-### Available Scripts
+## 📈 Project Statistics
 
-```bash
-# Development
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run start        # Start production server
-npm run lint         # Run ESLint
+- **21 Interactive Lessons** across 3 comprehensive learning units
+- **50+ Dynamic Flashcards** with spaced repetition algorithm
+- **100+ Practice Exercises** with intelligent answer validation
+- **Full Progress Tracking** with XP system and learning streaks
+- **Responsive Design** supporting desktop, tablet, and mobile
+- **Production Deployment** with real user engagement
 
-# Database
-npx prisma generate  # Generate Prisma client
-npx prisma migrate dev # Run database migrations
-node prisma/seed.js  # Seed database with course data
-npx prisma studio    # Open Prisma Studio (database GUI)
+## 🎯 Professional Highlights
 
-# Data Import
-npm run import:flashcards  # Import additional flashcards from JSON
-```
+This project demonstrates:
 
-## 📁 Project Structure
+- **Full-stack development** expertise with modern technologies
+- **Database design** and ORM implementation
+- **User experience** focus with intuitive interface design
+- **Production deployment** and DevOps best practices
+- **Scalable architecture** ready for real-world usage
 
-```
-learning-czech-app/
-├── src/
-│   ├── app/                    # Next.js App Router
-│   │   ├── layout.tsx          # Root layout with header/footer
-│   │   ├── page.tsx            # Home page with course overview
-│   │   ├── dashboard/          # User dashboard
-│   │   ├── units/              # Course units
-│   │   │   ├── page.tsx        # Units overview
-│   │   │   └── [id]/           # Dynamic unit pages
-│   │   │       ├── page.tsx    # Unit detail page
-│   │   │       └── lessons/    # Lesson system
-│   │   │           └── [lessonId]/
-│   │   │               ├── page.tsx      # Lesson content
-│   │   │               ├── practice/     # Practice mode
-│   │   │               ├── flashcards/   # Flashcard practice
-│   │   │               └── exercises/    # Exercise system
-│   │   │                   ├── page.tsx  # Exercise list
-│   │   │                   └── [exerciseId]/
-│   │   │                       └── page.tsx # Individual exercises
-│   │   └── api/                # API routes
-│   │       ├── exercises/      # Exercise data endpoints
-│   │       ├── flashcards/     # Flashcard data endpoints
-│   │       ├── lessons/        # Lesson data endpoints
-│   │       └── users/          # User progress endpoints
-│   ├── components/             # Reusable UI components
-│   │   ├── Header.tsx          # Site navigation
-│   │   ├── Footer.tsx          # Site footer
-│   │   ├── Button.tsx          # Interactive button component
-│   │   ├── Card.tsx            # Content card component
-│   │   ├── ProgressBar.tsx     # Progress visualization
-│   │   └── PageHeader.tsx      # Page title component
-│   └── lib/                    # Utility functions
-│       ├── prisma.ts           # Database client
-│       └── srs.ts              # Spaced repetition algorithm
-├── prisma/
-│   ├── schema.prisma           # Complete database schema
-│   ├── seed.js                 # Full course data seeding
-│   ├── dev.db                  # SQLite database
-│   └── migrations/             # Database migration history
-├── public/
-│   ├── images/                 # Flashcard images
-│   └── uploads/                # Audio files
-├── data/
-│   └── sample-flashcards.json  # Additional flashcard data
-├── scripts/
-│   └── import-flashcards.ts    # Data import utilities
-└── docs/
-    ├── DB_SCHEMA.md            # Database documentation
-    └── PROJECT_PLAN.md         # Development roadmap
-```
+## 👨‍💻 Developer
 
-## 🎯 Current Implementation Status
-
-### ✅ Completed Features
-
-- **Complete Unit 1**: "Basic Greetings" with 4 full lessons
-- **Lesson System**: Text, audio, video, and vocabulary content
-- **Flashcard Practice**: Full SRS implementation with progress tracking
-- **Exercise Types**: MCQ, fill-in-the-blank, and interactive matching
-- **Navigation Flow**: Seamless progression through content
-- **Audio Integration**: Pronunciation playback system
-- **Progress Tracking**: Lesson and exercise completion
-- **Responsive Design**: Mobile-friendly interface
-- **Database Schema**: Complete course structure
-- **API Endpoints**: Full REST API for all features
-
-### 🎓 Learning Content
-
-**Unit 1: Basic Greetings and Introductions**
-
-- 1.1 Hello and Goodbye (Ahoj, Na shledanou)
-- 1.2 Introducing Yourself (Jmenuji se...)
-- 1.3 How Are You? (Jak se máš?)
-- 1.4 Please and Thank You (Prosím, Děkuji)
-- 1.5 Excuse Me and Sorry (Promiňte, Omlouvám se)
-- 1.6 Meeting People (Těší mě)
-- 1.7 Formal vs Informal Speech
-
-**Unit 2: Numbers, Time and Dates**
-
-- 2.1 Numbers 1-10
-- 2.2 Numbers 11-20
-- 2.3 Numbers 21-100
-- 2.4 Telling Time - Hours
-- 2.5 Telling Time - Minutes
-- 2.6 Days of the Week
-- 2.7 Months and Seasons
-- 2.8 Dates and Birthdays
-
-**Unit 3: Family, People and Relationships**
-
-- 3.1 Family Members
-- 3.2 Extended Family
-- 3.3 Physical Appearance
-- 3.4 Personality Traits
-- 3.5 Relationships and Friends
-- 3.6 Family Activities
-
-**Total Content:**
-
-- 21 Complete Lessons across 3 units
-- 50+ Flashcards with dynamic images and audio
-- 100+ Interactive Exercises (MCQ, Fill-in, Matching)
-- Sample audio pronunciation (beep sounds)
-- Progress tracking and analytics
-
-## 🚀 Deployment
-
-This app is ready for deployment on Vercel, Netlify, or any Node.js hosting platform:
-
-```bash
-# Build for production
-npm run build
-
-# Start production server
-npm start
-```
-
-## 🤝 Contributing
-
-Contributions are welcome! Areas for contribution:
-
-- Additional Czech lessons and vocabulary
-- New exercise types
-- Audio recordings by native speakers
-- UI/UX improvements
-- Performance optimizations
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Czech language experts and native speakers
-- Modern language learning methodologies
-- Open source community
-- Educational technology inspiration from Duolingo, Anki, and Memrise
-
----
-
-**Ready to learn Czech? Start with Unit 1 and master basic greetings! 🎉**
-
-**Šťastné učení! (Happy Learning!)**
+**Gamze Mise Vural** - Full Stack Developer  
+📧 [GitHub Profile](https://github.com/Gamze-Mise)  
+🌐 [Live Application](https://learning-czech-app.vercel.app/)
