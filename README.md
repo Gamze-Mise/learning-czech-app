@@ -21,37 +21,37 @@
 
 ### 🏠 Dynamic Homepage with Progress Tracking
 
-![Homepage](./public/images/flashcards/main-page.png)
+![Homepage](./public/images/screenshots/main-page.png)
 
 _Smart "Continue Learning" functionality with personalized progress tracking and unit-based learning path_
 
 ### 📚 Learning Units Overview
 
-![Units](./public/images/flashcards/units.png)
+![Units](./public/images/screenshots/units.png)
 
 _Comprehensive learning units with progress tracking and coming soon features_
 
 ### 📖 Interactive Lesson Interface
 
-![Lessons](./public/images/flashcards/lesson-page.png)
+![Lessons](./public/images/screenshots/lesson-page.png)
 
 _Rich multimedia content with audio pronunciation, visual aids, and structured learning progression_
 
 ### 🎴 Smart Flashcard System
 
-![Flashcards](./public/images/flashcards/flashcard-question.png)
+![Flashcards](./public/images/screenshots/flashcard-question.png)
 
 _Interactive flashcards with spaced repetition algorithm, visual feedback, and audio pronunciation_
 
 ### 🎯 Diverse Exercise System
 
-![Exercises](./public/images/flashcards/exercise.png)
+![Exercises](./public/images/screenshots/exercise.png)
 
 _Multiple exercise formats including multiple choice, fill-in-the-blank, and interactive matching games_
 
 ### 📊 Comprehensive Analytics Dashboard
 
-![Dashboard](./public/images/flashcards/dashboard.png)
+![Dashboard](./public/images/screenshots/dashboard.png)
 
 _Real-time learning analytics with detailed progress tracking, XP system, and performance insights_
 
