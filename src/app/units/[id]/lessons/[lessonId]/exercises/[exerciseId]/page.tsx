@@ -37,6 +37,10 @@ export default function ExercisePage() {
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [shuffledRightItems, setShuffledRightItems] = useState<string[]>([]);
+  const [lastMatchFeedback, setLastMatchFeedback] = useState<
+    "correct" | "incorrect" | null
+  >(null);
 
   useEffect(() => {
     fetchExercise();
@@ -48,6 +52,8 @@ export default function ExercisePage() {
     setShowResult(false);
     setIsCorrect(false);
     setTimeLeft(null);
+    setShuffledRightItems([]);
+    setLastMatchFeedback(null);
   }, [exerciseId]);
 
   useEffect(() => {
@@ -75,6 +81,22 @@ export default function ExercisePage() {
         setExercise(exerciseData);
         if (exerciseData.timeLimit) {
           setTimeLeft(exerciseData.timeLimit);
+        }
+
+        // For MATCHING exercises, pre-shuffle right-side items so they are not aligned
+        if (
+          exerciseData.type === "MATCHING" &&
+          Array.isArray(exerciseData.options)
+        ) {
+          const rightItems: string[] = exerciseData.options.map(
+            (opt: any) => opt.right
+          );
+          const shuffled = [...rightItems];
+          for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+          }
+          setShuffledRightItems(shuffled);
         }
 
         // Fetch all exercises for this lesson
@@ -177,7 +199,12 @@ export default function ExercisePage() {
           userId: 1, // Default user for now
           exerciseId: exercise?.id,
           correct,
-          answer: exercise?.type === "FILL" ? userAnswer : selectedAnswer,
+          answer:
+            exercise?.type === "FILL"
+              ? userAnswer
+              : exercise?.type === "MATCHING"
+              ? JSON.stringify(matchingPairs)
+              : selectedAnswer,
           timeSpent: exercise?.timeLimit
             ? exercise.timeLimit - (timeLeft || 0)
             : null,
@@ -234,12 +261,18 @@ export default function ExercisePage() {
 
   const handleRightClick = (rightItem: string) => {
     if (selectedLeft) {
-      // Create or update the matching pair
+      // Check if this pair is correct based on exercise options
+      const isCorrectPair = exercise?.options.some(
+        (opt: any) => opt.left === selectedLeft && opt.right === rightItem
+      );
+
+      // Her durumda eşleşmeyi kaydet (doğru ya da yanlış), böylece kullanıcı tıklamayı hissetsin
       setMatchingPairs((prev) => ({
         ...prev,
         [selectedLeft]: rightItem,
       }));
-      setSelectedLeft(null); // Clear selection after matching
+      setLastMatchFeedback(isCorrectPair ? "correct" : "incorrect");
+      setSelectedLeft(null); // Eşleştirmeden sonra seçimi temizle
     }
   };
 
@@ -249,6 +282,9 @@ export default function ExercisePage() {
       delete newPairs[leftItem];
       return newPairs;
     });
+    // After removing a pair, allow the user to immediately rematch this left item
+    setSelectedLeft(leftItem);
+    setLastMatchFeedback(null);
   };
 
   const formatTime = (seconds: number) => {
@@ -395,17 +431,26 @@ export default function ExercisePage() {
                       {exercise.options.map((option, index) => {
                         const leftItem = option.left;
                         const isSelected = selectedLeft === leftItem;
-                        const isMatched = matchingPairs[leftItem];
+                        const matchedRight = matchingPairs[leftItem];
+                        const isMatched = !!matchedRight;
+                        const isCorrectMatch =
+                          isMatched &&
+                          exercise.options.some(
+                            (opt: any) =>
+                              opt.left === leftItem && opt.right === matchedRight
+                          );
 
                         return (
                           <div key={index} className="relative">
                             <button
                               type="button"
                               onClick={() => handleLeftClick(leftItem)}
-                              disabled={!!isMatched}
+                              disabled={isCorrectMatch}
                               className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
-                                isMatched
+                                isCorrectMatch
                                   ? "bg-green-100 border-green-400 text-green-900 cursor-not-allowed font-semibold"
+                                  : isMatched
+                                  ? "bg-red-100 border-red-400 text-red-900 font-semibold"
                                   : isSelected
                                   ? "bg-blue-100 border-blue-500 text-blue-900 font-bold shadow-md"
                                   : "bg-white border-gray-400 hover:border-blue-400 hover:bg-blue-50 text-gray-900 font-medium"
@@ -436,15 +481,27 @@ export default function ExercisePage() {
                       })}
                     </div>
 
-                    {/* Right Column - English Words */}
+                    {/* Right Column - English Words (shuffled) */}
                     <div className="space-y-2">
                       <h5 className="font-medium text-gray-600 mb-3">
                         🇺🇸 English
                       </h5>
-                      {exercise.options.map((option, index) => {
-                        const rightItem = option.right;
-                        const isUsed =
-                          Object.values(matchingPairs).includes(rightItem);
+                      {(shuffledRightItems.length
+                        ? shuffledRightItems
+                        : exercise.options.map((opt: any) => opt.right)
+                      ).map((rightItem, index) => {
+                        const matchedEntry = Object.entries(matchingPairs).find(
+                          ([, value]) => value === rightItem
+                        );
+                        const isMatched = !!matchedEntry;
+                        const matchedLeft = matchedEntry?.[0];
+                        const isCorrectUse =
+                          isMatched &&
+                          exercise.options.some(
+                            (opt: any) =>
+                              opt.left === matchedLeft && opt.right === rightItem
+                          );
+                        const isUsed = isMatched;
 
                         return (
                           <button
@@ -453,8 +510,10 @@ export default function ExercisePage() {
                             onClick={() => handleRightClick(rightItem)}
                             disabled={!selectedLeft || isUsed}
                             className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
-                              isUsed
-                                ? "bg-gray-200 border-gray-400 text-gray-700 cursor-not-allowed font-medium"
+                              isUsed && isCorrectUse
+                                ? "bg-green-100 border-green-400 text-green-900 cursor-not-allowed font-semibold"
+                                : isUsed && !isCorrectUse
+                                ? "bg-red-100 border-red-400 text-red-900 cursor-not-allowed font-semibold"
                                 : selectedLeft
                                 ? "bg-green-50 border-green-400 hover:bg-green-100 text-gray-900 font-medium"
                                 : "bg-gray-100 border-gray-400 text-gray-600 cursor-not-allowed"
@@ -462,7 +521,7 @@ export default function ExercisePage() {
                           >
                             <div className="flex items-center justify-between">
                               <span>{rightItem}</span>
-                              {isUsed && (
+                              {isUsed && isCorrectUse && (
                                 <span className="text-green-600">✓</span>
                               )}
                             </div>
@@ -492,6 +551,16 @@ export default function ExercisePage() {
                         ></div>
                       </div>
                     </div>
+                    {lastMatchFeedback === "correct" && (
+                      <p className="mt-2 text-green-700">
+                        ✓ Nice! That&apos;s a correct match.
+                      </p>
+                    )}
+                    {lastMatchFeedback === "incorrect" && (
+                      <p className="mt-2 text-red-700">
+                        ✗ Those don&apos;t match. Try a different pair.
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
@@ -537,52 +606,86 @@ export default function ExercisePage() {
                   </h3>
                 </div>
 
-                <div className="space-y-3">
-                  <div>
-                    <span className="font-medium text-gray-700">
-                      Your answer:{" "}
-                    </span>
-                    <span className="font-semibold">
-                      {exercise.type === "FILL" ? userAnswer : selectedAnswer}
-                    </span>
+                {exercise.type === "MATCHING" ? (
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-gray-800">
+                      Your matches:
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {exercise.options.map((opt: any, index: number) => {
+                        const userRight = matchingPairs[opt.left];
+                        const pairCorrect = userRight === opt.right;
+                        return (
+                          <div
+                            key={index}
+                            className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm ${
+                              pairCorrect
+                                ? "bg-green-50 border-green-200 text-green-800"
+                                : "bg-red-50 border-red-200 text-red-800"
+                            }`}
+                          >
+                            <span>
+                              {opt.left}{" "}
+                              <span className="text-gray-500">→</span>{" "}
+                              {userRight || "—"}
+                            </span>
+                            <span className="ml-2">
+                              {pairCorrect ? "✓" : `→ ${opt.right}`}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div>
-                    <span className="font-medium text-gray-700">
-                      Correct answer:{" "}
-                    </span>
-                    <span className="font-semibold text-green-700">
-                      {exercise.type === "MCQ"
-                        ? exercise.options.find(
-                            (opt: any) => opt.correct === true
-                          )?.text || exercise.answer
-                        : exercise.answer}
-                    </span>
-                  </div>
-                  {/* Show reminder for FILL exercises when answer is accepted but not exactly correct */}
-                  {exercise.type === "FILL" &&
-                    isCorrect &&
-                    userAnswer.trim() !== exercise.answer && (
-                      <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                        <span className="font-medium text-blue-700">
-                          💡 Remember:{" "}
-                        </span>
-                        <span className="text-blue-800">
-                          The correct spelling is "{exercise.answer}" (with
-                          proper capitalization and accents)
-                        </span>
-                      </div>
-                    )}
-                  {exercise.explanation && (
+                ) : (
+                  <div className="space-y-3">
                     <div>
                       <span className="font-medium text-gray-700">
-                        Explanation:{" "}
+                        Your answer:{" "}
                       </span>
-                      <span className="text-gray-800">
-                        {exercise.explanation}
+                      <span className="font-semibold">
+                        {exercise.type === "FILL" ? userAnswer : selectedAnswer}
                       </span>
                     </div>
-                  )}
-                </div>
+                    <div>
+                      <span className="font-medium text-gray-700">
+                        Correct answer:{" "}
+                      </span>
+                      <span className="font-semibold text-green-700">
+                        {exercise.type === "MCQ"
+                          ? exercise.options.find(
+                              (opt: any) => opt.correct === true
+                            )?.text || exercise.answer
+                          : exercise.answer}
+                      </span>
+                    </div>
+                    {/* Show reminder for FILL exercises when answer is accepted but not exactly correct */}
+                    {exercise.type === "FILL" &&
+                      isCorrect &&
+                      userAnswer.trim() !== exercise.answer && (
+                        <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                          <span className="font-medium text-blue-700">
+                            💡 Remember:{" "}
+                          </span>
+                          <span className="text-blue-800">
+                            The correct spelling is "{exercise.answer}" (with
+                            proper capitalization and accents)
+                          </span>
+                        </div>
+                      )}
+                  </div>
+                )}
+
+                {exercise.explanation && (
+                  <div className="mt-3">
+                    <span className="font-medium text-gray-700">
+                      Explanation:{" "}
+                    </span>
+                    <span className="text-gray-800">
+                      {exercise.explanation}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-center">

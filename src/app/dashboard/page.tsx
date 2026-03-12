@@ -54,7 +54,7 @@ export default function DashboardPage() {
     const now = new Date();
     const time = new Date(timestamp);
     const diffInHours = Math.floor(
-      (now.getTime() - time.getTime()) / (1000 * 60 * 60)
+      (now.getTime() - time.getTime()) / (1000 * 60 * 60),
     );
 
     if (diffInHours < 1) return "Just now";
@@ -197,7 +197,7 @@ export default function DashboardPage() {
                 >
                   <div
                     className={`w-2 h-2 ${getActivityColor(
-                      activity.type
+                      activity.type,
                     )} rounded-full`}
                   ></div>
                   <div className="flex-1">
@@ -265,10 +265,10 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Button
             href="/"
-            className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-left"
+            className="p-4 bg-sky-50 rounded-lg hover:bg-sky-100 transition-colors text-left"
           >
-            <h3 className="font-semibold text-blue-800">Continue Learning</h3>
-            <p className="text-sm text-blue-600">Resume your current lesson</p>
+            <h3 className="font-semibold text-blue-900">Continue Learning</h3>
+            <p className="text-sm text-blue-800">Resume your current lesson</p>
           </Button>
           <Button
             href="/units"

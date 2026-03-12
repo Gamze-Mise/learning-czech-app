@@ -3,6 +3,8 @@ import PageHeader from "@/components/PageHeader";
 import Card from "@/components/Card";
 import Button from "@/components/Button";
 
+export const dynamic = "force-dynamic";
+
 export default async function UnitsPage() {
   // Fetch courses and units from database
   const courses = await prisma.courses.findMany({

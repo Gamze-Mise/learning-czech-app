@@ -3,6 +3,8 @@ import PageHeader from "@/components/PageHeader";
 import Card from "@/components/Card";
 import Button from "@/components/Button";
 
+export const dynamic = "force-dynamic";
+
 interface PracticePageProps {
   params: Promise<{ id: string; lessonId: string }>;
 }

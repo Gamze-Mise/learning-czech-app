@@ -216,9 +216,14 @@ export default function LessonPage() {
                     </p>
                     <p className="text-xs text-gray-700">Click to watch</p>
                   </div>
-                  <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                  <a
+                    href={part.videoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors inline-block"
+                  >
                     Watch
-                  </button>
+                  </a>
                 </div>
               </div>
             )}
@@ -327,7 +332,10 @@ export default function LessonPage() {
           </div>
           {lesson.flashcards.length > 6 && (
             <div className="text-center">
-              <Button variant="outline">
+              <Button
+                variant="outline"
+                href={`/units/${unitId}/lessons/${lessonId}/flashcards`}
+              >
                 View All {lesson.flashcards.length} Cards
               </Button>
             </div>

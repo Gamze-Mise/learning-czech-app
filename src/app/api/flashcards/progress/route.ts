@@ -108,9 +108,10 @@ export async function GET(request: NextRequest) {
     let whereClause: any = { userId };
 
     if (lessonId) {
-      whereClause.flashcard = {
-        lessonId: lessonId,
-      };
+      const lessonIdNum = parseInt(lessonId, 10);
+      if (!Number.isNaN(lessonIdNum)) {
+        whereClause.flashcard = { lessonId: lessonIdNum };
+      }
     }
 
     const progress = await prisma.flashcardProgress.findMany({

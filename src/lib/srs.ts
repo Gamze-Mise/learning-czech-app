@@ -89,13 +89,13 @@ export function calculateMasteryPercentage(
 // Get flashcards due for review
 export function getDueFlashcards(
   flashcardProgresses: {
-    id: string;
+    id: number;
     nextDue: Date | null;
     box: number;
     isMastered: boolean;
   }[]
 ): {
-  id: string;
+  id: number;
   nextDue: Date | null;
   box: number;
   isMastered: boolean;

@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 interface CardProps {
   children: React.ReactNode;
   href?: string;
@@ -19,8 +21,16 @@ export default function Card({
   const classes = `${baseClasses} ${hoverClasses} ${className}`;
 
   if (href) {
+    const isInternal = href.startsWith("/");
+    if (isInternal) {
+      return (
+        <Link href={href} className={classes}>
+          {children}
+        </Link>
+      );
+    }
     return (
-      <a href={href} className={classes}>
+      <a href={href} className={classes} target="_blank" rel="noopener noreferrer">
         {children}
       </a>
     );

@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { useParams } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import Card from "@/components/Card";
 import Button from "@/components/Button";
+
+const USER_ID = 1; // TODO: replace with real auth
 
 interface Flashcard {
   id: number;
@@ -20,14 +22,18 @@ interface Flashcard {
 
 export default function FlashcardsPage() {
   const params = useParams();
-  const router = useRouter();
   const { id: unitId, lessonId } = params;
 
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [showAnswer, setShowAnswer] = useState(false);
+  const [savingProgress, setSavingProgress] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
+  const [sessionRatings, setSessionRatings] = useState<
+    { index: number; result: "known" | "unknown" }[]
+  >([]);
+  const cardSeenAtRef = useRef<number | null>(null);
 
   useEffect(() => {
     fetchFlashcards();
@@ -48,23 +54,92 @@ export default function FlashcardsPage() {
   };
 
   const handleFlip = () => {
-    setIsFlipped(!isFlipped);
-    setShowAnswer(!showAnswer);
+    if (!isFlipped) cardSeenAtRef.current = Date.now();
+    setIsFlipped((prev) => !prev);
+  };
+
+  const studyTimeSeconds = () => {
+    if (!cardSeenAtRef.current) return 0;
+    return Math.round((Date.now() - cardSeenAtRef.current) / 1000);
+  };
+
+  const reportProgress = async (result: "known" | "unknown") => {
+    const card = flashcards[currentIndex];
+    if (!card || savingProgress) return;
+    setSavingProgress(true);
+    try {
+      await fetch("/api/flashcards/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: USER_ID,
+          flashcardId: card.id,
+          result,
+          studyTimeSeconds: studyTimeSeconds(),
+        }),
+      });
+    } catch (e) {
+      console.error("Error saving flashcard progress:", e);
+    } finally {
+      setSavingProgress(false);
+    }
+  };
+
+  const handleKnown = async () => {
+    if (!isFlipped) return;
+
+    await reportProgress("known");
+    setSessionRatings((prev) => {
+      const filtered = prev.filter((r) => r.index !== currentIndex);
+      return [...filtered, { index: currentIndex, result: "known" }];
+    });
+    const isLast = currentIndex === flashcards.length - 1;
+
+    if (isLast) {
+      setIsComplete(true);
+      return;
+    }
+
+    setCurrentIndex((prev) => prev + 1);
+    setIsFlipped(false);
+    cardSeenAtRef.current = null;
+  };
+
+  const handleUnknown = async () => {
+    if (!isFlipped) return;
+
+    await reportProgress("unknown");
+    setSessionRatings((prev) => {
+      const filtered = prev.filter((r) => r.index !== currentIndex);
+      return [...filtered, { index: currentIndex, result: "unknown" }];
+    });
+    const isLast = currentIndex === flashcards.length - 1;
+
+    if (isLast) {
+      setIsComplete(true);
+      return;
+    }
+
+    setCurrentIndex((prev) => prev + 1);
+    setIsFlipped(false);
+    cardSeenAtRef.current = null;
   };
 
   const handleNext = () => {
     if (currentIndex < flashcards.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+      setCurrentIndex((prev) => prev + 1);
       setIsFlipped(false);
-      setShowAnswer(false);
+      cardSeenAtRef.current = null;
+      setIsComplete(false);
     }
   };
 
   const handlePrevious = () => {
     if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
+      setCurrentIndex((prev) => prev - 1);
       setIsFlipped(false);
-      setShowAnswer(false);
+      cardSeenAtRef.current = null;
+      setIsComplete(false);
     }
   };
 
@@ -144,7 +219,11 @@ export default function FlashcardsPage() {
       {/* Flashcard */}
       <div className="max-w-2xl mx-auto">
         <Card className="min-h-96">
-          <div className="relative h-96">
+          <div
+            className="relative h-96 cursor-pointer"
+            onClick={handleFlip}
+            aria-label="Flip card"
+          >
             {/* Card Content */}
             <div
               className={`absolute inset-0 transition-transform duration-1000 ease-in-out ${
@@ -190,11 +269,9 @@ export default function FlashcardsPage() {
                     </button>
                   )}
 
-                  <div className="mt-6">
-                    <Button onClick={handleFlip} variant="primary" size="lg">
-                      Show Answer
-                    </Button>
-                  </div>
+                  <p className="mt-6 text-sm text-gray-500">
+                    Tap the card to flip and see the answer.
+                  </p>
                 </div>
               </div>
 
@@ -228,9 +305,28 @@ export default function FlashcardsPage() {
                     </span>
                   </div>
 
-                  <div className="mt-6">
-                    <Button onClick={handleFlip} variant="outline" size="lg">
-                      Show Question
+                  <p className="mt-4 text-sm text-blue-700">
+                    Decide how well you knew this card.
+                  </p>
+
+                  <div className="mt-6 flex flex-wrap justify-center gap-3">
+                    <Button
+                      onClick={handleUnknown}
+                      variant="secondary"
+                      size="md"
+                      disabled={savingProgress}
+                      className="bg-red-50 text-red-700 hover:bg-red-100"
+                    >
+                      Again
+                    </Button>
+                    <Button
+                      onClick={handleKnown}
+                      variant="primary"
+                      size="md"
+                      disabled={savingProgress}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      Got it
                     </Button>
                   </div>
                 </div>
@@ -239,6 +335,42 @@ export default function FlashcardsPage() {
           </div>
         </Card>
       </div>
+      {/* Session Complete */}
+      {isComplete && (
+        <Card>
+          <div className="text-center space-y-3">
+            <h3 className="text-xl font-bold text-gray-800">
+              Great job! You&apos;ve completed all cards for this session.
+            </h3>
+            <p className="text-sm text-gray-600">
+              You can review again or go back to the lesson whenever you like.
+            </p>
+            <div className="flex flex-wrap justify-center gap-3 mt-2">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setCurrentIndex(0);
+                  setIsFlipped(false);
+                  cardSeenAtRef.current = null;
+                  setIsComplete(false);
+                  setSessionRatings([]);
+                }}
+              >
+                Review cards again
+              </Button>
+              <Button href={`/units/${unitId}/lessons/${lessonId}`}>
+                Back to Lesson
+              </Button>
+              <Button
+                href={`/units/${unitId}/lessons/${lessonId}/practice`}
+                variant="outline"
+              >
+                Back to Practice
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Navigation Controls */}
       <div className="flex justify-center items-center space-x-4">
@@ -257,14 +389,18 @@ export default function FlashcardsPage() {
               onClick={() => {
                 setCurrentIndex(index);
                 setIsFlipped(false);
-                setShowAnswer(false);
+                cardSeenAtRef.current = null;
+                setIsComplete(false);
               }}
               className={`w-3 h-3 rounded-full transition-colors ${
-                index === currentIndex
-                  ? "bg-blue-600"
-                  : index < currentIndex
-                  ? "bg-green-500"
-                  : "bg-gray-300"
+                (() => {
+                  const rating = sessionRatings.find(
+                    (r) => r.index === index
+                  );
+                  if (rating?.result === "known") return "bg-green-500";
+                  if (rating?.result === "unknown") return "bg-red-400";
+                  return index === currentIndex ? "bg-blue-600" : "bg-gray-300";
+                })()
               }`}
             />
           ))}
