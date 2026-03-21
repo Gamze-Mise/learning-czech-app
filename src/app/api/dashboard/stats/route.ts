@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { internalError, jsonOk, logApiError } from "@/lib/api-response";
 
 export async function GET(request: NextRequest) {
   try {
@@ -153,8 +154,8 @@ export async function GET(request: NextRequest) {
       })
       .slice(0, 5);
 
-    return NextResponse.json({
-      success: true,
+    return jsonOk({
+      success: true as const,
       stats: {
         // Progress bars
         overallProgress,
@@ -184,10 +185,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error fetching dashboard stats:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch dashboard stats" },
-      { status: 500 }
-    );
+    logApiError("dashboard/stats", error);
+    return internalError();
   }
 }

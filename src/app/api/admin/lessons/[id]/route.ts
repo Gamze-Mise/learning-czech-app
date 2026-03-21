@@ -1,0 +1,102 @@
+import { NextRequest } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { requireAdminSession } from "@/lib/auth/require-admin";
+import { LessonType } from "@prisma/client";
+import { internalError, jsonError, jsonOk, logApiError } from "@/lib/api-response";
+
+type Ctx = { params: Promise<{ id: string }> };
+
+export async function GET(_request: NextRequest, ctx: Ctx) {
+  const { session, response } = await requireAdminSession();
+  if (!session) return response!;
+
+  const { id } = await ctx.params;
+  const lessonId = parseInt(id, 10);
+  if (Number.isNaN(lessonId)) {
+    return jsonError("Invalid id", 400);
+  }
+
+  try {
+    const lesson = await prisma.lesson.findUnique({
+      where: { id: lessonId },
+      include: {
+        unit: true,
+        parts: { orderBy: { order: "asc" } },
+        flashcards: { orderBy: { order: "asc" } },
+        exercises: { orderBy: { order: "asc" } },
+      },
+    });
+
+    if (!lesson) {
+      return jsonError("Not found", 404);
+    }
+
+    return jsonOk({ lesson });
+  } catch (error) {
+    logApiError("admin/lessons/[id] GET", error);
+    return internalError();
+  }
+}
+
+export async function PATCH(request: NextRequest, ctx: Ctx) {
+  const { session, response } = await requireAdminSession();
+  if (!session) return response!;
+
+  const { id } = await ctx.params;
+  const lessonId = parseInt(id, 10);
+  if (Number.isNaN(lessonId)) {
+    return jsonError("Invalid id", 400);
+  }
+
+  try {
+    const body = await request.json();
+    const data: Record<string, unknown> = {};
+
+    if (body.title != null) data.title = String(body.title).trim();
+    if (body.order != null) data.order = Number(body.order);
+    if (body.description !== undefined)
+      data.description = body.description
+        ? String(body.description).trim()
+        : null;
+    if (body.type != null) data.type = body.type as LessonType;
+    if (body.difficulty != null) data.difficulty = Number(body.difficulty);
+    if (body.estimatedTime !== undefined)
+      data.estimatedTime =
+        body.estimatedTime != null ? Number(body.estimatedTime) : null;
+    if (body.isActive != null) data.isActive = Boolean(body.isActive);
+    if (body.unitId != null) data.unitId = Number(body.unitId);
+
+    const lesson = await prisma.lesson.update({
+      where: { id: lessonId },
+      data,
+    });
+
+    return jsonOk({ lesson });
+  } catch (e) {
+    logApiError("admin/lessons/[id] PATCH", e);
+    return internalError();
+  }
+}
+
+export async function DELETE(_request: NextRequest, ctx: Ctx) {
+  const { session, response } = await requireAdminSession();
+  if (!session) return response!;
+
+  const { id } = await ctx.params;
+  const lessonId = parseInt(id, 10);
+  if (Number.isNaN(lessonId)) {
+    return jsonError("Invalid id", 400);
+  }
+
+  try {
+    await prisma.lesson.update({
+      where: { id: lessonId },
+      data: { isActive: false },
+    });
+
+    return jsonOk({ ok: true as const });
+  } catch (error) {
+    logApiError("admin/lessons/[id] DELETE", error);
+    return internalError();
+  }
+}

@@ -46,8 +46,9 @@ next-env.d.ts
 /prisma/seed.js
 /prisma/full-content-seed.js
 /prisma/comprehensive-seed.js
-/prisma/migrations
 /prisma/complete-exercises-flashcards.js
+/docs/
+# Keep prisma/migrations in version control for reproducible deploys.
 
 
 

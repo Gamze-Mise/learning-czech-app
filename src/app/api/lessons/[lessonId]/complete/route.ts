@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { internalError, jsonError, jsonOk, logApiError } from "@/lib/api-response";
 
 export async function POST(
   request: NextRequest,
@@ -11,10 +12,7 @@ export async function POST(
     const { userId } = body;
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "User ID is required" },
-        { status: 400 }
-      );
+      return jsonError("User ID is required", 400);
     }
 
     // Check if lesson exists
@@ -32,7 +30,7 @@ export async function POST(
     });
 
     if (!lesson) {
-      return NextResponse.json({ error: "Lesson not found" }, { status: 404 });
+      return jsonError("Lesson not found", 404);
     }
 
     // Check if study session already exists
@@ -101,8 +99,8 @@ export async function POST(
       },
     });
 
-    return NextResponse.json({
-      success: true,
+    return jsonOk({
+      success: true as const,
       message: "Lesson completed successfully!",
       xpEarned: 50,
       nextLesson: nextLesson
@@ -115,10 +113,7 @@ export async function POST(
       studySession,
     });
   } catch (error) {
-    console.error("Error completing lesson:", error);
-    return NextResponse.json(
-      { error: "Failed to complete lesson" },
-      { status: 500 }
-    );
+    logApiError("lessons/[lessonId]/complete", error);
+    return internalError();
   }
 }

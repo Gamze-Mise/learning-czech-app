@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { internalError, jsonError, jsonOk, logApiError } from "@/lib/api-response";
 
 export async function GET(
   request: NextRequest,
@@ -25,7 +26,7 @@ export async function GET(
     });
 
     if (!unit) {
-      return NextResponse.json({ error: "Unit not found" }, { status: 404 });
+      return jsonError("Unit not found", 404);
     }
 
     // Get user's completed study sessions for this unit
@@ -108,8 +109,8 @@ export async function GET(
         ? Math.round((completedLessons / totalLessons) * 100)
         : 0;
 
-    return NextResponse.json({
-      success: true,
+    return jsonOk({
+      success: true as const,
       unit: {
         ...unit,
         lessons: lessonsWithProgress,
@@ -119,10 +120,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error("Error fetching unit progress:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch unit progress" },
-      { status: 500 }
-    );
+    logApiError("units/[unitId]/progress", error);
+    return internalError();
   }
 }

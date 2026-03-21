@@ -3,6 +3,7 @@ import Link from "next/link";
 interface ButtonProps {
   children: React.ReactNode;
   href?: string;
+  type?: "button" | "submit" | "reset";
   onClick?: () => void;
   variant?: "primary" | "secondary" | "outline";
   size?: "sm" | "md" | "lg";
@@ -13,6 +14,7 @@ interface ButtonProps {
 export default function Button({
   children,
   href,
+  type = "button",
   onClick,
   variant = "primary",
   size = "md",
@@ -46,7 +48,12 @@ export default function Button({
   }
 
   return (
-    <button onClick={onClick} className={classes} disabled={disabled}>
+    <button
+      type={type}
+      onClick={onClick}
+      className={classes}
+      disabled={disabled}
+    >
       {children}
     </button>
   );

@@ -2,16 +2,28 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import SignOutButton from "@/components/SignOutButton";
 
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/dashboard", label: "Dashboard" },
   { href: "/units", label: "Units" },
-  { href: "/admin", label: "Admin" },
 ];
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  if (
+    pathname.startsWith("/admin") ||
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/forgot-password" ||
+    pathname === "/reset-password"
+  ) {
+    return null;
+  }
 
   return (
     <header className="bg-blue-600 text-white shadow-lg sticky top-0 z-50">
@@ -24,7 +36,7 @@ export default function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
+          <nav className="hidden md:flex items-center space-x-8">
             {navLinks.map(({ href, label }) => (
               <Link
                 key={href}
@@ -34,6 +46,7 @@ export default function Header() {
                 {label}
               </Link>
             ))}
+            <SignOutButton />
           </nav>
 
           {/* Mobile Menu Button */}
@@ -71,6 +84,12 @@ export default function Header() {
                   </Link>
                 </li>
               ))}
+              <li>
+                <SignOutButton
+                  className="block w-full text-left py-2 px-3 rounded-md hover:bg-blue-700 font-medium"
+                  onDone={() => setMobileMenuOpen(false)}
+                />
+              </li>
             </ul>
           </nav>
         )}

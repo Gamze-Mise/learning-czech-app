@@ -1,6 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { processFlashcardReview } from "@/lib/srs";
+import {
+  internalError,
+  jsonError,
+  jsonOk,
+  logApiError,
+} from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,10 +15,7 @@ export async function POST(request: NextRequest) {
     const { userId, flashcardId, result, studyTimeSeconds } = body;
 
     if (!userId || !flashcardId || !result) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
+      return jsonError("Missing required fields", 400);
     }
 
     // Get current progress or create new one
@@ -78,17 +82,14 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({
-      success: true,
+    return jsonOk({
+      success: true as const,
       progress: updatedProgress,
       xpEarned: reviewResult.xpEarned,
     });
   } catch (error) {
-    console.error("Error updating flashcard progress:", error);
-    return NextResponse.json(
-      { error: "Failed to update progress" },
-      { status: 500 }
-    );
+    logApiError("flashcards/progress POST", error);
+    return internalError();
   }
 }
 
@@ -99,13 +100,15 @@ export async function GET(request: NextRequest) {
     const lessonId = searchParams.get("lessonId");
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "User ID is required" },
-        { status: 400 }
-      );
+      return jsonError("User ID is required", 400);
     }
 
-    let whereClause: any = { userId };
+    const uid = parseInt(userId, 10);
+    if (Number.isNaN(uid)) {
+      return jsonError("Invalid user ID", 400);
+    }
+
+    const whereClause: Prisma.FlashcardProgressWhereInput = { userId: uid };
 
     if (lessonId) {
       const lessonIdNum = parseInt(lessonId, 10);
@@ -125,12 +128,9 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ progress });
+    return jsonOk({ progress });
   } catch (error) {
-    console.error("Error fetching flashcard progress:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch progress" },
-      { status: 500 }
-    );
+    logApiError("flashcards/progress GET", error);
+    return internalError();
   }
 }

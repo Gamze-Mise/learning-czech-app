@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { internalError, jsonError, jsonOk, logApiError } from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
   try {
@@ -7,22 +8,15 @@ export async function POST(request: NextRequest) {
     const { userId, exerciseId, correct, answer, timeSpent } = body;
 
     if (!userId || !exerciseId || typeof correct !== "boolean") {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
+      return jsonError("Missing required fields", 400);
     }
 
-    // Get exercise to calculate points
     const exercise = await prisma.exercise.findUnique({
       where: { id: exerciseId },
     });
 
     if (!exercise) {
-      return NextResponse.json(
-        { error: "Exercise not found" },
-        { status: 404 }
-      );
+      return jsonError("Exercise not found", 404);
     }
 
     // Calculate points based on correctness and difficulty
@@ -65,16 +59,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({
-      success: true,
+    return jsonOk({
+      success: true as const,
       result,
       pointsEarned: points,
     });
   } catch (error) {
-    console.error("Error saving exercise result:", error);
-    return NextResponse.json(
-      { error: "Failed to save result" },
-      { status: 500 }
-    );
+    logApiError("exercises/result", error);
+    return internalError();
   }
 }

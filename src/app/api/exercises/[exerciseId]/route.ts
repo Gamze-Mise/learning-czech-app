@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { internalError, jsonData, jsonError, logApiError } from "@/lib/api-response";
 
 export async function GET(
   request: NextRequest,
@@ -13,13 +14,9 @@ export async function GET(
     });
 
     if (!exercise) {
-      return NextResponse.json(
-        { error: "Exercise not found" },
-        { status: 404 }
-      );
+      return jsonError("Exercise not found", 404);
     }
 
-    // Handle JSON fields - Prisma already parses JSON fields
     const parsedExercise = {
       ...exercise,
       options: exercise.options || [],
@@ -27,12 +24,9 @@ export async function GET(
       explanation: exercise.explanation || "",
     };
 
-    return NextResponse.json(parsedExercise);
+    return jsonData(parsedExercise);
   } catch (error) {
-    console.error("Error fetching exercise:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    logApiError("exercises/[exerciseId]", error);
+    return internalError();
   }
 }

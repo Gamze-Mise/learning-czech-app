@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { internalError, jsonData, jsonError, logApiError } from "@/lib/api-response";
 
 export async function GET(
   request: NextRequest,
@@ -29,15 +30,12 @@ export async function GET(
     });
 
     if (!lesson) {
-      return NextResponse.json({ error: "Lesson not found" }, { status: 404 });
+      return jsonError("Lesson not found", 404);
     }
 
-    return NextResponse.json(lesson);
+    return jsonData(lesson);
   } catch (error) {
-    console.error("Error fetching lesson:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch lesson" },
-      { status: 500 }
-    );
+    logApiError("lessons/[lessonId]", error);
+    return internalError();
   }
 }

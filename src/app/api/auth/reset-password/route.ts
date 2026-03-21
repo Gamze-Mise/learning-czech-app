@@ -1,0 +1,49 @@
+import { NextRequest } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { hashPassword } from "@/lib/auth/password";
+import { internalError, jsonError, jsonOk, logApiError } from "@/lib/api-response";
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const token = String(body.token ?? "").trim();
+    const password = String(body.password ?? "");
+
+    if (!token) {
+      return jsonError("Reset link is invalid or expired.", 400);
+    }
+    if (password.length < 8) {
+      return jsonError("Password must be at least 8 characters.", 400);
+    }
+
+    const user = await prisma.user.findFirst({
+      where: {
+        passwordResetToken: token,
+        passwordResetExpires: { gt: new Date() },
+      },
+    });
+
+    if (!user) {
+      return jsonError("Reset link is invalid or expired.", 400);
+    }
+
+    const passwordHash = await hashPassword(password);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        passwordResetToken: null,
+        passwordResetExpires: null,
+      },
+    });
+
+    return jsonOk({
+      ok: true as const,
+      message: "Your password has been updated. You can sign in now.",
+    });
+  } catch (e) {
+    logApiError("auth/reset-password", e);
+    return internalError();
+  }
+}

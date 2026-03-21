@@ -19,8 +19,8 @@
   }
 }
 
+/* Page background comes from layout (Tailwind); avoid fighting auth/main pages */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, Helvetica,
+    sans-serif;
 }

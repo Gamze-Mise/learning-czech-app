@@ -140,7 +140,7 @@ export function getStudyRecommendation(
   if (dueCount > 0) {
     return {
       type: "review",
-      message: `${dueCount} kartın tekrar zamanı geldi!`,
+      message: `${dueCount} card(s) are due for review!`,
       priority: dueCount > 10 ? "high" : "medium",
     };
   }
@@ -148,14 +148,14 @@ export function getStudyRecommendation(
   if (masteredCount === totalCount) {
     return {
       type: "mastered",
-      message: "Tebrikler! Bu dersi tamamladınız! 🎉",
+      message: "Congratulations! You’ve completed this lesson! 🎉",
       priority: "low",
     };
   }
 
   return {
     type: "new",
-    message: "Yeni kartlar öğrenmeye hazırsınız!",
+    message: "You’re ready to learn new cards!",
     priority: "medium",
   };
 }

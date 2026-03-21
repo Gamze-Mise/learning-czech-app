@@ -1,11 +1,25 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Footer() {
+  const pathname = usePathname();
+  if (
+    pathname.startsWith("/admin") ||
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/forgot-password" ||
+    pathname === "/reset-password"
+  ) {
+    return null;
+  }
+
   return (
     <footer className="bg-gray-800 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Sol Kolon - Logo ve Açıklama */}
+          {/* Brand / description */}
           <div>
             <div className="flex items-center space-x-2 mb-4">
               <span className="text-2xl">🇨🇿</span>
@@ -17,7 +31,7 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Orta Kolon - Hızlı Linkler */}
+          {/* Quick links */}
           <div>
             <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2 text-sm">
@@ -40,7 +54,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Sağ Kolon - İletişim */}
+          {/* Contact */}
           <div>
             <h4 className="text-lg font-semibold mb-4">Contact</h4>
             <p className="text-gray-300 text-sm">
@@ -49,7 +63,7 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Alt Çizgi ve Copyright */}
+        {/* Copyright */}
         <div className="border-t border-gray-700 mt-8 pt-8 text-center">
           <p className="text-gray-300 text-sm">
             &copy; 2025 Czech Learning App. Happy Learning! Šťastné učení! 🎉

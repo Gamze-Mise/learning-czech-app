@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { internalError, jsonOk, logApiError } from "@/lib/api-response";
 
 export async function GET(request: NextRequest) {
   try {
@@ -49,8 +50,8 @@ export async function GET(request: NextRequest) {
         },
       });
 
-      return NextResponse.json({
-        hasProgress: false,
+      return jsonOk({
+        hasProgress: false as const,
         nextLesson: firstLesson,
         message: "Start your Czech learning journey!",
         stats: {
@@ -117,8 +118,8 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({
-      hasProgress: true,
+    return jsonOk({
+      hasProgress: true as const,
       lastCompletedLesson: {
         id: currentLesson.id,
         title: currentLesson.title,
@@ -143,10 +144,7 @@ export async function GET(request: NextRequest) {
         : null,
     });
   } catch (error) {
-    console.error("Error fetching user progress:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch progress" },
-      { status: 500 }
-    );
+    logApiError("users/progress", error);
+    return internalError();
   }
 }

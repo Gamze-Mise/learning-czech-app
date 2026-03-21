@@ -1,5 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import {
+  internalError,
+  jsonError,
+  jsonOk,
+  logApiError,
+} from "@/lib/api-response";
 
 export async function GET(
   request: NextRequest,
@@ -14,10 +20,7 @@ export async function GET(
     });
 
     if (!userStats) {
-      return NextResponse.json(
-        { error: "User stats not found" },
-        { status: 404 }
-      );
+      return jsonError("User stats not found", 404);
     }
 
     // Get recent study sessions
@@ -62,7 +65,7 @@ export async function GET(
     const accuracy =
       totalExercises > 0 ? (correctExercises / totalExercises) * 100 : 0;
 
-    return NextResponse.json({
+    return jsonOk({
       userStats,
       recentSessions,
       flashcardSummary: {
@@ -78,11 +81,8 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error("Error fetching user stats:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch user stats" },
-      { status: 500 }
-    );
+    logApiError("users/[userId]/stats GET", error);
+    return internalError();
   }
 }
 
@@ -102,12 +102,9 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json({ success: true, stats: updatedStats });
+    return jsonOk({ success: true as const, stats: updatedStats });
   } catch (error) {
-    console.error("Error updating user stats:", error);
-    return NextResponse.json(
-      { error: "Failed to update user stats" },
-      { status: 500 }
-    );
+    logApiError("users/[userId]/stats PUT", error);
+    return internalError();
   }
 }

@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { internalError, jsonOk, logApiError } from "@/lib/api-response";
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const courses = await prisma.courses.findMany({
       include: {
@@ -17,15 +18,9 @@ export async function GET(request: NextRequest) {
       orderBy: { order: "asc" },
     });
 
-    return NextResponse.json({
-      success: true,
-      courses,
-    });
+    return jsonOk({ success: true as const, courses });
   } catch (error) {
-    console.error("Error fetching courses:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch courses" },
-      { status: 500 }
-    );
+    logApiError("courses", error);
+    return internalError();
   }
 }
