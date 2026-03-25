@@ -8,7 +8,6 @@ const LESSON_TYPES = [
   "VOCABULARY",
   "GRAMMAR",
   "CONVERSATION",
-  "PRONUNCIATION",
   "CULTURE",
   "MIXED",
 ] as const;

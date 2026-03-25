@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getSessionFromCookies } from "@/lib/auth/session";
 import { internalError, jsonError, jsonOk, logApiError } from "@/lib/api-response";
 
 export async function POST(
@@ -8,11 +9,13 @@ export async function POST(
 ) {
   try {
     const { lessonId } = await context.params;
-    const body = await request.json();
-    const { userId } = body;
-
-    if (!userId) {
-      return jsonError("User ID is required", 400);
+    const session = await getSessionFromCookies();
+    if (!session) {
+      return jsonError("Unauthorized", 401);
+    }
+    const userId = Number(session.sub);
+    if (!Number.isFinite(userId)) {
+      return jsonError("Invalid session", 401);
     }
 
     // Check if lesson exists
@@ -36,7 +39,7 @@ export async function POST(
     // Check if study session already exists
     const existingSession = await prisma.studySession.findFirst({
       where: {
-        userId: parseInt(userId),
+        userId,
         lessonId: parseInt(lessonId),
       },
     });
@@ -56,7 +59,7 @@ export async function POST(
       // Create new session
       studySession = await prisma.studySession.create({
         data: {
-          userId: parseInt(userId),
+          userId,
           lessonId: parseInt(lessonId),
           startTime: new Date(),
           endTime: new Date(),
@@ -74,7 +77,7 @@ export async function POST(
 
     // Update user stats (removed lessonsCompleted as it's calculated from StudySession)
     await prisma.userStats.upsert({
-      where: { userId: parseInt(userId) },
+      where: { userId },
       update: {
         xp: { increment: 50 },
         currentStreak: { increment: 1 },
@@ -83,7 +86,7 @@ export async function POST(
         updatedAt: new Date(),
       },
       create: {
-        userId: parseInt(userId),
+        userId,
         xp: 50,
         totalExercises: 0,
         totalFlashcards: 0,

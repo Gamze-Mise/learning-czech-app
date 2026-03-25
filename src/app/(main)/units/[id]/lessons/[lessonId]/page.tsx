@@ -74,6 +74,11 @@ export default function LessonPage() {
     );
   }
 
+  const visibleParts = (lesson.parts ?? []).filter((part: any) => {
+    const title = String(part?.title ?? "").trim().toLowerCase();
+    return title !== "pronunciation guide";
+  });
+
   return (
     <div className="space-y-6">
       {/* Lesson Header */}
@@ -106,7 +111,7 @@ export default function LessonPage() {
         <div className="grid grid-cols-4 gap-4 text-center">
           <div className="bg-blue-50 rounded-lg p-3">
             <div className="text-xl font-bold text-blue-600">
-              {lesson.parts.length}
+              {visibleParts.length}
             </div>
             <div className="text-xs text-blue-500">Parts</div>
           </div>
@@ -134,12 +139,12 @@ export default function LessonPage() {
       {/* Lesson Parts */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-800">Lesson Content</h3>
-        {lesson.parts.map((part: any, index: number) => (
+        {visibleParts.map((part: any, index: number) => (
           <Card key={part.id}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">
-                  {part.order}
+                  {index + 1}
                 </div>
                 <div>
                   <h4 className="font-bold text-gray-900">{part.title}</h4>

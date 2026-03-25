@@ -66,8 +66,6 @@ export default function UnitPage() {
         return "bg-green-500";
       case "CONVERSATION":
         return "bg-purple-500";
-      case "PRONUNCIATION":
-        return "bg-orange-500";
       case "CULTURE":
         return "bg-pink-500";
       default:
@@ -168,7 +166,7 @@ export default function UnitPage() {
             <div className="text-xl font-bold text-green-600">
               {unit.lessons.reduce(
                 (sum, lesson) => sum + lesson.flashcards.length,
-                0
+                0,
               )}
             </div>
             <div className="text-xs text-green-500">Flashcards</div>
@@ -177,7 +175,7 @@ export default function UnitPage() {
             <div className="text-xl font-bold text-purple-600">
               {unit.lessons.reduce(
                 (sum, lesson) => sum + lesson.exercises.length,
-                0
+                0,
               )}
             </div>
             <div className="text-xs text-purple-500">Exercises</div>
@@ -193,7 +191,7 @@ export default function UnitPage() {
               <div className="flex items-center space-x-2">
                 <div
                   className={`w-3 h-3 rounded-full ${getLessonTypeColor(
-                    lesson.type
+                    lesson.type,
                   )}`}
                 ></div>
                 <span className="text-sm font-medium text-gray-600 capitalize">
