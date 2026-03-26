@@ -16,7 +16,21 @@ export async function POST(request: NextRequest) {
       return jsonError("Email and password are required", 400);
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const users = await prisma.$queryRaw<
+      Array<{
+        id: number;
+        email: string;
+        name: string | null;
+        passwordHash: string | null;
+        emailVerified: Date | null;
+        role: string | null;
+      }>
+    >`SELECT "id", "email", "name", "passwordHash", "emailVerified", "role"
+       FROM "users"
+       WHERE "email" = ${email}
+       LIMIT 1`;
+    const user = users[0] ?? null;
+
     if (!user || !user.passwordHash) {
       return jsonError("Invalid email or password", 401);
     }
@@ -33,10 +47,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const role = user.role ?? "USER";
     const token = await createSessionToken({
       sub: String(user.id),
       email: user.email,
-      role: user.role,
+      role,
     });
     await setSessionCookie(token);
 
@@ -46,7 +61,7 @@ export async function POST(request: NextRequest) {
         id: user.id,
         email: user.email,
         name: user.name,
-        role: user.role,
+        role,
       },
     });
   } catch (e) {

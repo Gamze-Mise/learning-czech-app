@@ -269,6 +269,7 @@ model UserStats {
   totalStudyTime  Int       @default(0)
   totalFlashcards Int       @default(0)
   totalExercises  Int       @default(0)
+  lessonsCompleted Int      @default(0)
   correctAnswers  Int       @default(0)
   totalAnswers    Int       @default(0)
   longestStreak   Int       @default(0)
@@ -288,6 +289,7 @@ model UserStats {
 enum UserRole {
   USER
   ADMIN
+  SUPER_ADMIN
   TEACHER
   MODERATOR
 }

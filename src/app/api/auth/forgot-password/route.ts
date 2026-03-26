@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendPasswordResetEmail } from "@/lib/email";
-import { internalError, jsonOk, logApiError } from "@/lib/api-response";
+import { jsonOk, logApiError } from "@/lib/api-response";
 
 const APP_URL =
   process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -24,24 +24,23 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Full row: avoids UserSelect typing issues when CI runs before prisma generate.
-    // passwordHash read via narrow type so builds match schema even if client is stale.
-    const user = await prisma.user.findUnique({ where: { email } });
-    const passwordHash = user
-      ? (user as { passwordHash?: string | null }).passwordHash
-      : null;
+    // Use raw select to avoid enum decode failures on full User rows.
+    const users = await prisma.$queryRaw<
+      Array<{ id: number; email: string; name: string | null; passwordHash: string | null }>
+    >`SELECT "id", "email", "name", "passwordHash" FROM "users" WHERE "email" = ${email} LIMIT 1`;
+    const user = users[0] ?? null;
+    const passwordHash = user?.passwordHash ?? null;
 
     if (user && passwordHash) {
       const token = randomBytes(32).toString("hex");
       const passwordResetExpires = new Date(Date.now() + 1000 * 60 * 60); // 1h
 
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          passwordResetToken: token,
-          passwordResetExpires,
-        },
-      });
+      await prisma.$executeRaw`
+        UPDATE "users"
+        SET "passwordResetToken" = ${token},
+            "passwordResetExpires" = ${passwordResetExpires}
+        WHERE "id" = ${user.id}
+      `;
 
       const resetUrl = `${APP_URL}/reset-password?token=${encodeURIComponent(token)}`;
       const emailResult = await sendPasswordResetEmail({
@@ -50,12 +49,27 @@ export async function POST(request: NextRequest) {
         resetUrl,
       });
 
+      if (
+        process.env.NODE_ENV !== "production" &&
+        (!emailResult.ok || !emailResult.delivered)
+      ) {
+        return jsonOk({
+          ok: true as const,
+          message: GENERIC_MESSAGE,
+          devResetUrl: resetUrl,
+        });
+      }
+
       if (!emailResult.ok && process.env.NODE_ENV === "production") {
         logApiError(
           "auth/forgot-password email",
           new Error(emailResult.error ?? "send failed")
         );
-        return internalError();
+        // Do not reveal delivery/backend state to clients.
+        return jsonOk({
+          ok: true as const,
+          message: GENERIC_MESSAGE,
+        });
       }
     }
 
@@ -65,6 +79,10 @@ export async function POST(request: NextRequest) {
     });
   } catch (e) {
     logApiError("auth/forgot-password", e);
-    return internalError();
+    // Keep response generic even on DB/runtime errors to avoid leaking account/system state.
+    return jsonOk({
+      ok: true as const,
+      message: GENERIC_MESSAGE,
+    });
   }
 }

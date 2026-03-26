@@ -16,12 +16,13 @@ export async function POST(request: NextRequest) {
       return jsonError("Password must be at least 8 characters.", 400);
     }
 
-    const user = await prisma.user.findFirst({
-      where: {
-        passwordResetToken: token,
-        passwordResetExpires: { gt: new Date() },
-      },
-    });
+    const users = await prisma.$queryRaw<
+      Array<{ id: number }>
+    >`SELECT "id" FROM "users"
+       WHERE "passwordResetToken" = ${token}
+         AND "passwordResetExpires" > ${new Date()}
+       LIMIT 1`;
+    const user = users[0] ?? null;
 
     if (!user) {
       return jsonError("Reset link is invalid or expired.", 400);
@@ -29,14 +30,13 @@ export async function POST(request: NextRequest) {
 
     const passwordHash = await hashPassword(password);
 
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        passwordHash,
-        passwordResetToken: null,
-        passwordResetExpires: null,
-      },
-    });
+    await prisma.$executeRaw`
+      UPDATE "users"
+      SET "passwordHash" = ${passwordHash},
+          "passwordResetToken" = NULL,
+          "passwordResetExpires" = NULL
+      WHERE "id" = ${user.id}
+    `;
 
     return jsonOk({
       ok: true as const,

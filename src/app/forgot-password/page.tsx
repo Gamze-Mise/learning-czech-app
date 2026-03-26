@@ -11,12 +11,14 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [devResetUrl, setDevResetUrl] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
     setMessage(null);
+    setDevResetUrl(null);
     try {
       const res = await fetch("/api/auth/forgot-password", {
         method: "POST",
@@ -29,6 +31,9 @@ export default function ForgotPasswordPage() {
         return;
       }
       setMessage(data.message ?? "Check your email.");
+      setDevResetUrl(
+        typeof data.devResetUrl === "string" ? data.devResetUrl : null
+      );
       setEmail("");
     } catch {
       setError("Network error");
@@ -54,6 +59,14 @@ export default function ForgotPasswordPage() {
             <p className="text-sm text-green-700 bg-green-50 p-3 rounded-lg">
               {message}
             </p>
+          )}
+          {devResetUrl && (
+            <div className="text-sm text-amber-800 bg-amber-50 border border-amber-200 p-3 rounded-lg space-y-1">
+              <p>Email delivery is unavailable in local/dev mode.</p>
+              <Link href={devResetUrl} className="font-medium underline break-all">
+                Open reset link
+              </Link>
+            </div>
           )}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">

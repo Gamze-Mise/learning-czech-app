@@ -1,0 +1,73 @@
+import { NextRequest } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { requireAdminSession } from "@/lib/auth/require-admin";
+import { internalError, jsonError, jsonOk, logApiError } from "@/lib/api-response";
+
+type Ctx = { params: Promise<{ id: string }> };
+
+export async function GET(_req: NextRequest, ctx: Ctx) {
+  const { session, response } = await requireAdminSession();
+  if (!session) return response!;
+
+  const { id } = await ctx.params;
+  const courseId = Number(id);
+  if (!Number.isFinite(courseId)) return jsonError("Invalid id", 400);
+
+  try {
+    const course = await prisma.courses.findUnique({
+      where: { id: courseId },
+      include: { units: { orderBy: { order: "asc" } } },
+    });
+    if (!course) return jsonError("Not found", 404);
+    return jsonOk({ course });
+  } catch (e) {
+    logApiError("admin/courses/[id] GET", e);
+    return internalError();
+  }
+}
+
+export async function PATCH(request: NextRequest, ctx: Ctx) {
+  const { session, response } = await requireAdminSession();
+  if (!session) return response!;
+
+  const { id } = await ctx.params;
+  const courseId = Number(id);
+  if (!Number.isFinite(courseId)) return jsonError("Invalid id", 400);
+
+  try {
+    const body = await request.json();
+    const data: Record<string, unknown> = {};
+    if (body.title != null) data.title = String(body.title).trim();
+    if (body.description !== undefined)
+      data.description = body.description ? String(body.description).trim() : null;
+    if (body.order != null) data.order = Number(body.order);
+    if (body.level != null) data.level = Number(body.level);
+    if (body.isActive != null) data.isActive = Boolean(body.isActive);
+    if (body.thumbnail !== undefined)
+      data.thumbnail = body.thumbnail ? String(body.thumbnail).trim() : null;
+
+    const course = await prisma.courses.update({ where: { id: courseId }, data });
+    return jsonOk({ course });
+  } catch (e) {
+    logApiError("admin/courses/[id] PATCH", e);
+    return internalError();
+  }
+}
+
+export async function DELETE(_req: NextRequest, ctx: Ctx) {
+  const { session, response } = await requireAdminSession();
+  if (!session) return response!;
+
+  const { id } = await ctx.params;
+  const courseId = Number(id);
+  if (!Number.isFinite(courseId)) return jsonError("Invalid id", 400);
+
+  try {
+    await prisma.courses.update({ where: { id: courseId }, data: { isActive: false } });
+    return jsonOk({ ok: true as const });
+  } catch (e) {
+    logApiError("admin/courses/[id] DELETE", e);
+    return internalError();
+  }
+}
+

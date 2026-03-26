@@ -8,18 +8,13 @@ export async function GET() {
   if (!session) return response!;
 
   try {
-    const units = await prisma.unit.findMany({
-      where: { isActive: true },
-      orderBy: [{ courseId: "asc" }, { order: "asc" }],
-      include: {
-        course: { select: { id: true, title: true } },
-        _count: { select: { lessons: true } },
-      },
+    const courses = await prisma.courses.findMany({
+      orderBy: { order: "asc" },
+      include: { _count: { select: { units: true } } },
     });
-
-    return jsonOk({ units });
-  } catch (error) {
-    logApiError("admin/units GET", error);
+    return jsonOk({ courses });
+  } catch (e) {
+    logApiError("admin/courses GET", e);
     return internalError();
   }
 }
@@ -30,13 +25,12 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const courseId = body.courseId != null ? Number(body.courseId) : null;
     const title = String(body.title ?? "").trim();
     const description =
       body.description != null && String(body.description).trim()
         ? String(body.description).trim()
         : null;
-    const order = Number(body.order ?? 1);
+    const order = Number(body.order ?? 0);
     const level = Number(body.level ?? 1);
     const isActive = body.isActive !== false;
     const thumbnail =
@@ -46,17 +40,13 @@ export async function POST(request: NextRequest) {
 
     if (!title) return jsonError("title is required", 400);
 
-    if (courseId != null) {
-      const course = await prisma.courses.findUnique({ where: { id: courseId } });
-      if (!course) return jsonError("Course not found", 404);
-    }
-
-    const unit = await prisma.unit.create({
-      data: { courseId, title, description, order, level, isActive, thumbnail },
+    const course = await prisma.courses.create({
+      data: { title, description, order, level, isActive, thumbnail },
     });
-    return jsonOk({ unit });
+    return jsonOk({ course });
   } catch (e) {
-    logApiError("admin/units POST", e);
+    logApiError("admin/courses POST", e);
     return internalError();
   }
 }
+

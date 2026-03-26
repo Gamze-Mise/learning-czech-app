@@ -6,6 +6,8 @@ import AdminLogoutButton from "./AdminLogoutButton";
 
 const items = [
   { href: "/admin", label: "Overview", icon: "◆" },
+  { href: "/admin/courses", label: "Courses", icon: "▦" },
+  { href: "/admin/units", label: "Units", icon: "▥" },
   { href: "/admin/lessons", label: "Lessons", icon: "▤" },
 ];
 

@@ -3,7 +3,7 @@ import { getSessionFromCookies } from "./session";
 
 export async function requireAdminSession() {
   const session = await getSessionFromCookies();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || session.role !== "SUPER_ADMIN") {
     return {
       session: null as null,
       response: jsonError("Forbidden", 403),

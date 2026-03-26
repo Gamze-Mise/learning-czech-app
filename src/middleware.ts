@@ -5,6 +5,7 @@ import { verifyTokenEdge } from "@/lib/auth/edge-verify";
 
 const AUTH_PUBLIC = [
   "/login",
+  "/admin/login",
   "/register",
   "/forgot-password",
   "/reset-password",
@@ -36,8 +37,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Keep Super Admin login page publicly reachable.
+  if (pathname === "/admin/login") {
+    return NextResponse.next();
+  }
+
   if (pathname.startsWith("/admin")) {
-    if (!session || session.role !== "ADMIN") {
+    if (!session || session.role !== "SUPER_ADMIN") {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       url.searchParams.set("redirect", pathname);
