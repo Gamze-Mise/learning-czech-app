@@ -1,22 +1,34 @@
 "use client";
 
-import { useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import Card from "@/components/Card";
 import Button from "@/components/Button";
 
-function AdminLoginForm() {
-  const searchParams = useSearchParams();
+function safeRedirect(raw: string | null, fallback: string): string {
+  if (!raw || !raw.startsWith("/")) return fallback;
+  return raw;
+}
+
+export default function AdminLoginPage() {
   const router = useRouter();
-  const redirect = searchParams.get("redirect") ?? "/admin";
-  const reset = searchParams.get("reset");
+  const [redirect, setRedirect] = useState("/admin");
+  const [reset, setReset] = useState(false);
+  const [queryReady, setQueryReady] = useState(false);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    setRedirect(safeRedirect(sp.get("redirect"), "/admin"));
+    setReset(sp.get("reset") === "1");
+    setQueryReady(true);
+  }, []);
 
   function userLoginUrl() {
     const userRedirect = redirect.startsWith("/admin") ? "/" : redirect;
@@ -63,7 +75,7 @@ function AdminLoginForm() {
           hover={false}
           className="max-w-md mx-auto w-full shadow-md border border-slate-200/80"
         >
-          {reset === "1" && (
+          {queryReady && reset && (
             <p className="text-sm text-green-700 bg-green-50 p-3 rounded-lg mb-4">
               Password updated. Sign in with your new password.
             </p>
@@ -141,19 +153,5 @@ function AdminLoginForm() {
         </Card>
       </div>
     </div>
-  );
-}
-
-export default function AdminLoginPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center text-slate-600">
-          Loading…
-        </div>
-      }
-    >
-      <AdminLoginForm />
-    </Suspense>
   );
 }
