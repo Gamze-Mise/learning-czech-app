@@ -1,12 +1,42 @@
 import { NextRequest } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/auth/password";
 import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
 import { internalError, jsonError, jsonOk, logApiError } from "@/lib/api-response";
 
+export const dynamic = "force-dynamic";
+
+function envConfigErrorResponse(): ReturnType<typeof internalError> | null {
+  const secret = process.env.AUTH_SECRET?.trim();
+  if (!secret || secret.length < 32) {
+    console.error(
+      "[auth/login] Set AUTH_SECRET (min 32 chars) in Vercel → Environment Variables for Production."
+    );
+    return internalError();
+  }
+  const db = process.env.DATABASE_URL?.trim();
+  if (!db) {
+    console.error(
+      "[auth/login] Set DATABASE_URL in Vercel (hosted Postgres, not localhost)."
+    );
+    return internalError();
+  }
+  return null;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const configErr = envConfigErrorResponse();
+    if (configErr) return configErr;
+
+    let body: { email?: unknown; password?: unknown };
+    try {
+      body = (await request.json()) as { email?: unknown; password?: unknown };
+    } catch {
+      return jsonError("Invalid JSON body", 400);
+    }
+
     const email = String(body.email ?? "")
       .trim()
       .toLowerCase();
@@ -16,26 +46,29 @@ export async function POST(request: NextRequest) {
       return jsonError("Email and password are required", 400);
     }
 
-    const users = await prisma.$queryRaw<
-      Array<{
-        id: number;
-        email: string;
-        name: string | null;
-        passwordHash: string | null;
-        emailVerified: Date | null;
-        role: string | null;
-      }>
-    >`SELECT "id", "email", "name", "passwordHash", "emailVerified", "role"
-       FROM "users"
-       WHERE "email" = ${email}
-       LIMIT 1`;
-    const user = users[0] ?? null;
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        passwordHash: true,
+        emailVerified: true,
+        role: true,
+      },
+    });
 
     if (!user || !user.passwordHash) {
       return jsonError("Invalid email or password", 401);
     }
 
-    const valid = await verifyPassword(password, user.passwordHash);
+    let valid = false;
+    try {
+      valid = await verifyPassword(password, user.passwordHash);
+    } catch {
+      console.error("[auth/login] password verify threw (corrupt hash?)");
+      return jsonError("Invalid email or password", 401);
+    }
     if (!valid) {
       return jsonError("Invalid email or password", 401);
     }
@@ -47,7 +80,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const role = user.role ?? "USER";
+    const role = String(user.role);
     const token = await createSessionToken({
       sub: String(user.id),
       email: user.email,
@@ -65,6 +98,13 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError) {
+      console.error(`[auth/login] Prisma ${e.code}: ${e.message}`);
+    } else if (e instanceof Prisma.PrismaClientInitializationError) {
+      console.error(`[auth/login] Prisma init failed: ${e.message}`);
+    } else if (e instanceof Error) {
+      console.error(`[auth/login] ${e.name}: ${e.message}`);
+    }
     logApiError("auth/login", e);
     return internalError();
   }
