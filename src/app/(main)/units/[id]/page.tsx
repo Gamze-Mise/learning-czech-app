@@ -113,7 +113,6 @@ export default function UnitPage() {
 
   return (
     <div className="space-y-6">
-      {/* Unit Header */}
       <PageHeader
         title={unit.title}
         subtitle={
@@ -122,7 +121,6 @@ export default function UnitPage() {
         }
       />
 
-      {/* Unit Information */}
       <div className="bg-white rounded-xl shadow-lg p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -137,7 +135,6 @@ export default function UnitPage() {
           </div>
         </div>
 
-        {/* Unit Progress */}
         <div className="mb-4">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm font-medium text-gray-700">
@@ -183,7 +180,6 @@ export default function UnitPage() {
         </div>
       </div>
 
-      {/* Lessons Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
         {unit.lessons.map((lesson) => (
           <Card key={lesson.id} href={`/units/${unitId}/lessons/${lesson.id}`}>
@@ -254,7 +250,6 @@ export default function UnitPage() {
         ))}
       </div>
 
-      {/* Back Button */}
       <div className="text-center">
         <Button href="/" variant="outline" className="inline-flex items-center">
           <svg

@@ -12,7 +12,10 @@ export default function SignOutButton({ className, onDone }: Props) {
 
   async function signOut() {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "same-origin",
+      });
     } finally {
       onDone?.();
       router.push("/login");

@@ -1,18 +1,15 @@
-// SRS (Spaced Repetition System) helper functions
-// Enhanced Leitner box system implementation
-
 export function intervalDaysForBox(box: number): number {
   switch (box) {
     case 1:
-      return 0; // Same day
+      return 0;
     case 2:
-      return 1; // 1 day
+      return 1;
     case 3:
-      return 3; // 3 days
+      return 3;
     case 4:
-      return 7; // 1 week
+      return 7;
     case 5:
-      return 14; // 2 weeks
+      return 14;
     default:
       return 1;
   }
@@ -53,16 +50,14 @@ export function processFlashcardReview(
     correctCount = currentCorrectCount + 1;
     streak = currentStreak + 1;
 
-    // XP calculation based on box and streak
     xpEarned = newBox * 2 + (streak > 3 ? streak : 0);
   } else {
     newBox = Math.max(currentBox - 1, 1);
     wrongCount = currentWrongCount + 1;
-    streak = 0; // Reset streak on wrong answer
-    xpEarned = 1; // Small XP for attempt
+    streak = 0;
+    xpEarned = 1;
   }
 
-  // Check if mastered (box 5 and streak >= 5)
   const isMastered = newBox === 5 && streak >= 5;
 
   return {
@@ -76,7 +71,6 @@ export function processFlashcardReview(
   };
 }
 
-// Calculate mastery percentage
 export function calculateMasteryPercentage(
   correctCount: number,
   wrongCount: number
@@ -108,7 +102,6 @@ export function getDueFlashcards(
   );
 }
 
-// Calculate study session statistics
 export function calculateSessionStats(
   results: { correct: boolean; xpEarned: number; timeSpent: number }[]
 ) {
@@ -127,7 +120,6 @@ export function calculateSessionStats(
   };
 }
 
-// Determine next study recommendation
 export function getStudyRecommendation(
   dueCount: number,
   masteredCount: number,

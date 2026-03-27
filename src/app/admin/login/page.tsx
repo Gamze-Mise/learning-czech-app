@@ -1,21 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import Card from "@/components/Card";
 import Button from "@/components/Button";
 
-export default function AdminLoginPage() {
+function AdminLoginForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const redirect = searchParams.get("redirect") ?? "/admin";
+  const reset = searchParams.get("reset");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function userLoginUrl() {
+    const userRedirect = redirect.startsWith("/admin") ? "/" : redirect;
+    return `/login?redirect=${encodeURIComponent(userRedirect)}`;
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -57,6 +63,29 @@ export default function AdminLoginPage() {
           hover={false}
           className="max-w-md mx-auto w-full shadow-md border border-slate-200/80"
         >
+          {reset === "1" && (
+            <p className="text-sm text-green-700 bg-green-50 p-3 rounded-lg mb-4">
+              Password updated. Sign in with your new password.
+            </p>
+          )}
+          <div className="mb-4">
+            <div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1">
+              <button
+                type="button"
+                onClick={() => router.push(userLoginUrl())}
+                className="rounded-lg px-3 py-2 text-sm font-semibold transition-colors text-slate-600 hover:text-slate-900"
+              >
+                User
+              </button>
+              <button
+                type="button"
+                className="rounded-lg px-3 py-2 text-sm font-semibold transition-colors bg-white text-slate-900 shadow-sm"
+              >
+                Admin
+              </button>
+            </div>
+          </div>
+
           {error && (
             <p className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
               {error}
@@ -84,7 +113,7 @@ export default function AdminLoginPage() {
                   Password
                 </label>
                 <Link
-                  href="/forgot-password?redirect=%2Fadmin%2Flogin"
+                  href="/forgot-password?intent=admin&redirect=%2Fadmin%2Flogin"
                   className="text-sm text-indigo-600 hover:underline"
                 >
                   Forgot password?
@@ -108,12 +137,6 @@ export default function AdminLoginPage() {
             >
               {loading ? "Signing in…" : "Sign in"}
             </Button>
-
-            <div className="text-center text-sm text-slate-600">
-              <Link href="/login" className="text-indigo-600 hover:underline">
-                Back to user sign in
-              </Link>
-            </div>
           </form>
         </Card>
       </div>
@@ -121,3 +144,16 @@ export default function AdminLoginPage() {
   );
 }
 
+export default function AdminLoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center text-slate-600">
+          Loading…
+        </div>
+      }
+    >
+      <AdminLoginForm />
+    </Suspense>
+  );
+}

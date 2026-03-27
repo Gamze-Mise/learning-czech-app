@@ -41,7 +41,6 @@ export default function EditLessonPage({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
-  // New content forms (URL-based assets for now)
   const [newPart, setNewPart] = useState({
     order: "1",
     type: "TEXT",
@@ -614,7 +613,6 @@ export default function EditLessonPage({
         </button>
       </form>
 
-      {/* Parts */}
       <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-4">
         <div className="flex items-center justify-between">
           <div>
@@ -770,7 +768,6 @@ export default function EditLessonPage({
         </form>
       </div>
 
-      {/* Flashcards */}
       <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-4">
         <div className="flex items-center justify-between">
           <div>
@@ -926,7 +923,6 @@ export default function EditLessonPage({
         </form>
       </div>
 
-      {/* Exercises */}
       <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-4">
         <div className="flex items-center justify-between">
           <div>

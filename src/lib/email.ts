@@ -1,7 +1,6 @@
 import { Resend } from "resend";
 import { devLog } from "@/lib/logger";
 
-/** English product name used in all transactional email subjects and HTML (do not use non-English APP_NAME here). */
 const DEFAULT_EMAIL_BRAND = "Learning Czech";
 
 function getEmailBrand(): string {
@@ -15,16 +14,76 @@ function getResend(): Resend | null {
   return new Resend(key);
 }
 
+async function sendViaResendHttp(params: {
+  from: string;
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+}): Promise<SendEmailResult> {
+  const key = process.env.RESEND_API_KEY?.trim();
+  if (!key || key === "re_xxxxxxxx") {
+    if (process.env.NODE_ENV === "development") {
+      console.warn(
+        "[email] Add RESEND_API_KEY to .env.local and restart `npm run dev`."
+      );
+    } else {
+      console.error(
+        "[email] RESEND_API_KEY missing or placeholder — transactional email disabled. Set it in Vercel Project Settings → Environment Variables."
+      );
+    }
+    return { ok: false, error: "Email not configured (RESEND_API_KEY)" };
+  }
+
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: params.from,
+        to: [params.to],
+        subject: params.subject,
+        html: params.html,
+        text: params.text,
+      }),
+    });
+
+    const raw = await res.text();
+    let parsed: { message?: string; id?: string } = {};
+    try {
+      parsed = JSON.parse(raw) as typeof parsed;
+    } catch {
+      /* ignore */
+    }
+
+    if (!res.ok) {
+      console.error("[email] Resend API error", res.status, raw);
+      return {
+        ok: false,
+        error:
+          parsed.message ||
+          `Resend request failed (${res.status}). Check RESEND_API_KEY, EMAIL_FROM, and recipient rules.`,
+      };
+    }
+
+    devLog("[email] Resend email id:", parsed.id ?? "(none)");
+    return { ok: true, delivered: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[email] Resend fetch failed:", e);
+    return { ok: false, error: msg };
+  }
+}
+
 export type SendVerificationEmailParams = {
   to: string;
   name: string | null;
   verifyUrl: string;
 };
 
-/**
- * Sends verification email via Resend (free tier: https://resend.com).
- * If RESEND_API_KEY is missing, logs to console in development (no throw).
- */
 export type SendEmailResult =
   | { ok: true; delivered: true }
   | { ok: true; delivered: false }
@@ -85,9 +144,6 @@ export type SendPasswordResetEmailParams = {
   resetUrl: string;
 };
 
-/**
- * Password reset email (same Resend setup as verification).
- */
 export async function sendPasswordResetEmail(
   params: SendPasswordResetEmailParams
 ): Promise<SendEmailResult> {
@@ -110,29 +166,20 @@ export async function sendPasswordResetEmail(
     </div>
   `;
 
-  const resend = getResend();
-  if (!resend) {
-    if (process.env.NODE_ENV === "development") {
-      console.warn(
-        "[email] RESEND_API_KEY not set — password reset link (dev only):",
-        params.resetUrl
-      );
-      return { ok: true, delivered: false };
-    }
-    return { ok: false, error: "Email not configured (RESEND_API_KEY)" };
-  }
+  const text = [
+    `${brand} — reset your password`,
+    "",
+    `Open this link (expires in 1 hour):`,
+    params.resetUrl,
+    "",
+    `If you did not request a reset, you can ignore this email.`,
+  ].join("\n");
 
-  const { data, error } = await resend.emails.send({
+  return sendViaResendHttp({
     from,
-    to: [params.to],
+    to: params.to.trim(),
     subject: `Reset your ${brand} password`,
     html,
+    text,
   });
-
-  if (error) {
-    console.error("[email] Resend error (password reset):", error);
-    return { ok: false, error: error.message };
-  }
-  devLog("[email] Password reset sent. Resend id:", data?.id ?? "(none)");
-  return { ok: true, delivered: true };
 }

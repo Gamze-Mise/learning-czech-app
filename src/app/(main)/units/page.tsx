@@ -7,7 +7,6 @@ import Button from "@/components/Button";
 export const dynamic = "force-dynamic";
 
 export default async function UnitsPage() {
-  // Fetch courses and units from database
   const courses = await prisma.courses.findMany({
     include: {
       units: {
@@ -30,14 +29,12 @@ export default async function UnitsPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <PageHeader
         title="📚 Czech Learning Units"
         subtitle="Choose a unit to start your Czech language journey"
         className="py-8"
       />
 
-      {/* Units Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
         {units.map((unit) => {
           const isActive = unit.isActive;
@@ -96,7 +93,6 @@ export default async function UnitsPage() {
                   </p>
                 </div>
 
-                {/* Unit Stats */}
                 <div className="grid grid-cols-3 gap-3 mt-5 text-center">
                   <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
                     <div
@@ -130,7 +126,6 @@ export default async function UnitsPage() {
                   </div>
                 </div>
 
-                {/* Status Badge */}
                 <div className="mt-5">
                   {!isActive ? (
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800">
@@ -138,7 +133,6 @@ export default async function UnitsPage() {
                     </span>
                   ) : null}
                 </div>
-                {/* Action Buttons */}
                 <div className="mt-auto pt-6 relative z-10">
                   {isActive ? (
                     <div className="grid grid-cols-2 gap-3">
@@ -173,7 +167,6 @@ export default async function UnitsPage() {
         })}
       </div>
 
-      {/* Quick Start Section */}
       {units.length > 0 && (
         <Card className="border border-slate-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-sm">
           <div className="text-center py-2">

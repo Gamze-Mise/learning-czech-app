@@ -12,7 +12,6 @@ interface PracticePageProps {
 export default async function PracticePage({ params }: PracticePageProps) {
   const { id: unitId, lessonId } = await params;
 
-  // Fetch lesson with flashcards and exercises
   const lesson = await prisma.lesson.findUnique({
     where: { id: parseInt(lessonId) },
     include: {
@@ -41,16 +40,13 @@ export default async function PracticePage({ params }: PracticePageProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <PageHeader
         title={`Practice: ${lesson.title}`}
         subtitle={lesson.description || "Practice your Czech skills"}
         className="py-8"
       />
 
-      {/* Practice Options */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Flashcards Practice */}
         <Card>
           <div className="text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -82,7 +78,6 @@ export default async function PracticePage({ params }: PracticePageProps) {
           </div>
         </Card>
 
-        {/* Exercises Practice */}
         <Card>
           <div className="text-center">
             <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -117,7 +112,6 @@ export default async function PracticePage({ params }: PracticePageProps) {
         </Card>
       </div>
 
-      {/* Lesson Info */}
       <Card>
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
           Lesson Information
@@ -150,7 +144,6 @@ export default async function PracticePage({ params }: PracticePageProps) {
         </div>
       </Card>
 
-      {/* Navigation */}
       <div className="flex flex-col sm:flex-row gap-4">
         <Button
           href={`/units/${unitId}/lessons/${lessonId}`}

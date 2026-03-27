@@ -132,7 +132,6 @@ export default function DashboardPage() {
         subtitle="Track your learning progress and achievements"
       />
 
-      {/* User Level & XP */}
       <Card>
         <div className="flex items-center justify-between">
           <div>
@@ -150,7 +149,6 @@ export default function DashboardPage() {
         </div>
       </Card>
 
-      {/* Learning Progress */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <h2 className="text-xl font-bold text-gray-800 mb-4">
@@ -223,7 +221,6 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <div className="text-center">
@@ -259,7 +256,6 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Quick Actions */}
       <Card>
         <h2 className="text-xl font-bold text-gray-800 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

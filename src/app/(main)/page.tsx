@@ -52,7 +52,6 @@ export default function Home() {
     );
   }
 
-  // Get first unit and lesson dynamically
   const firstCourse = courses[0];
   const firstUnit = firstCourse?.units[0];
   const firstLesson = firstUnit?.lessons[0];
@@ -64,26 +63,22 @@ export default function Home() {
     ? `/units/${firstUnit.id}/lessons/${firstLesson.id}`
     : "/units";
 
-  // Determine start learning link
   const startLearningLink = firstLesson
     ? `/units/${firstUnit.id}/lessons/${firstLesson.id}`
     : "/units";
 
-  // Determine flashcards link
   const flashcardsLink = firstLesson
     ? `/units/${firstUnit.id}/lessons/${firstLesson.id}/flashcards`
     : "/units";
 
   return (
     <div className="space-y-8">
-      {/* Hero Section */}
       <PageHeader
         title="Learn Czech Language"
         subtitle="Master Czech with interactive lessons, flashcards, and exercises"
         className="text-center py-12"
       />
 
-      {/* Continue Learning Section - Show if user has progress */}
       {userProgress?.stats && userProgress.stats.lessonsCompleted > 0 ? (
         <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-6 text-white">
           <div className="flex items-center justify-between">
@@ -135,9 +130,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Quick Start */}
         {firstLesson && (
           <Card className="p-6">
             <h3 className="text-xl font-bold text-gray-800 mb-4">
@@ -157,7 +150,6 @@ export default function Home() {
           </Card>
         )}
 
-        {/* Your Progress */}
         {userProgress?.stats && (
           <Card className="p-6">
             <h3 className="text-xl font-bold text-gray-800 mb-4">
@@ -192,7 +184,6 @@ export default function Home() {
         )}
       </div>
 
-      {/* Recommended Section */}
       <Card>
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
           Recommended for You
@@ -225,7 +216,6 @@ export default function Home() {
         </div>
       </Card>
 
-      {/* Recommended Lessons */}
       {courses.length > 0 && (
         <div className="space-y-4">
           <h3 className="text-xl font-bold text-gray-800">Available Lessons</h3>

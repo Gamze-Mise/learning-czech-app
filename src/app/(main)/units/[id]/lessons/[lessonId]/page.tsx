@@ -34,7 +34,6 @@ export default function LessonPage() {
 
   const playAudio = (audioUrl: string) => {
     if (audioUrl) {
-      // For demo purposes, show alert. In production, replace with actual audio files
       if (audioUrl.includes("/uploads/")) {
         alert(
           `🎵 Audio would play: ${audioUrl}\n\n(Demo mode - audio files not yet uploaded)`
@@ -81,7 +80,6 @@ export default function LessonPage() {
 
   return (
     <div className="space-y-6">
-      {/* Lesson Header */}
       <PageHeader
         title={lesson.title}
         subtitle={
@@ -89,7 +87,6 @@ export default function LessonPage() {
         }
       />
 
-      {/* Lesson Information */}
       <div className="bg-white rounded-xl shadow-lg p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -136,7 +133,6 @@ export default function LessonPage() {
         </div>
       </div>
 
-      {/* Lesson Parts */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-800">Lesson Content</h3>
         {visibleParts.map((part: any, index: number) => (
@@ -302,7 +298,6 @@ export default function LessonPage() {
         ))}
       </div>
 
-      {/* Flashcards Preview */}
       {lesson.flashcards.length > 0 && (
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-gray-800">
@@ -348,7 +343,6 @@ export default function LessonPage() {
         </div>
       )}
 
-      {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-4">
         <Button
           href={`/units/${unitId}/lessons/${lessonId}/practice`}

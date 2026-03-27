@@ -4,14 +4,14 @@ import { requireAdminSession } from "@/lib/auth/require-admin";
 import { LessonType } from "@prisma/client";
 import { internalError, jsonError, jsonOk, logApiError } from "@/lib/api-response";
 
-type Ctx = { params: Promise<{ id: string }> };
+type Ctx = { params: Promise<{ lessonId: string }> };
 
 export async function GET(_request: NextRequest, ctx: Ctx) {
   const { session, response } = await requireAdminSession();
   if (!session) return response!;
 
-  const { id } = await ctx.params;
-  const lessonId = parseInt(id, 10);
+  const { lessonId: idParam } = await ctx.params;
+  const lessonId = parseInt(idParam, 10);
   if (Number.isNaN(lessonId)) {
     return jsonError("Invalid id", 400);
   }
@@ -33,7 +33,7 @@ export async function GET(_request: NextRequest, ctx: Ctx) {
 
     return jsonOk({ lesson });
   } catch (error) {
-    logApiError("admin/lessons/[id] GET", error);
+    logApiError("admin/lessons/[lessonId] GET", error);
     return internalError();
   }
 }
@@ -42,8 +42,8 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
   const { session, response } = await requireAdminSession();
   if (!session) return response!;
 
-  const { id } = await ctx.params;
-  const lessonId = parseInt(id, 10);
+  const { lessonId: idParam } = await ctx.params;
+  const lessonId = parseInt(idParam, 10);
   if (Number.isNaN(lessonId)) {
     return jsonError("Invalid id", 400);
   }
@@ -73,7 +73,7 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
 
     return jsonOk({ lesson });
   } catch (e) {
-    logApiError("admin/lessons/[id] PATCH", e);
+    logApiError("admin/lessons/[lessonId] PATCH", e);
     return internalError();
   }
 }
@@ -82,8 +82,8 @@ export async function DELETE(_request: NextRequest, ctx: Ctx) {
   const { session, response } = await requireAdminSession();
   if (!session) return response!;
 
-  const { id } = await ctx.params;
-  const lessonId = parseInt(id, 10);
+  const { lessonId: idParam } = await ctx.params;
+  const lessonId = parseInt(idParam, 10);
   if (Number.isNaN(lessonId)) {
     return jsonError("Invalid id", 400);
   }
@@ -96,7 +96,7 @@ export async function DELETE(_request: NextRequest, ctx: Ctx) {
 
     return jsonOk({ ok: true as const });
   } catch (error) {
-    logApiError("admin/lessons/[id] DELETE", error);
+    logApiError("admin/lessons/[lessonId] DELETE", error);
     return internalError();
   }
 }

@@ -1,9 +1,6 @@
-import { jwtVerify } from "jose";
+import { jwtVerify } from "jose/jwt/verify";
 import type { SessionPayload } from "./session";
 
-/**
- * JWT verification for Edge runtime (middleware). Keep in sync with session.ts payload.
- */
 export async function verifyTokenEdge(
   token: string
 ): Promise<SessionPayload | null> {

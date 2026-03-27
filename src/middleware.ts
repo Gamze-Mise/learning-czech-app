@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { SESSION_COOKIE_NAME } from "@/lib/auth/constants";
 import { verifyTokenEdge } from "@/lib/auth/edge-verify";
 
-const AUTH_PUBLIC = [
+const PUBLIC_PATHS = [
   "/login",
   "/admin/login",
   "/register",
@@ -11,17 +11,10 @@ const AUTH_PUBLIC = [
   "/reset-password",
 ];
 
-function isAuthPublicPath(pathname: string): boolean {
-  return AUTH_PUBLIC.some(
+function isPublicPath(pathname: string): boolean {
+  return PUBLIC_PATHS.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`)
   );
-}
-
-function isAppProtectedPath(pathname: string): boolean {
-  if (pathname === "/") return true;
-  if (pathname.startsWith("/dashboard")) return true;
-  if (pathname.startsWith("/units")) return true;
-  return false;
 }
 
 export async function middleware(request: NextRequest) {
@@ -30,36 +23,46 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
   const session = token ? await verifyTokenEdge(token) : null;
 
-  if (isAuthPublicPath(pathname) && session) {
+  // Super Admin login: always reachable without session; logged-in super admins go straight to panel
+  if (pathname === "/admin/login") {
+    if (session?.role === "SUPER_ADMIN") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next();
+  }
+
+  if (isPublicPath(pathname) && session) {
+    if (pathname === "/forgot-password" || pathname === "/reset-password") {
+      return NextResponse.next();
+    }
     const url = request.nextUrl.clone();
     url.pathname = "/";
     url.search = "";
     return NextResponse.redirect(url);
   }
 
-  // Keep Super Admin login page publicly reachable.
-  if (pathname === "/admin/login") {
-    return NextResponse.next();
-  }
-
   if (pathname.startsWith("/admin")) {
     if (!session || session.role !== "SUPER_ADMIN") {
       const url = request.nextUrl.clone();
-      url.pathname = "/login";
+      url.pathname = "/admin/login";
       url.searchParams.set("redirect", pathname);
       return NextResponse.redirect(url);
     }
     return NextResponse.next();
   }
 
-  if (isAppProtectedPath(pathname)) {
-    if (!session) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/login";
-      url.searchParams.set("redirect", pathname);
-      return NextResponse.redirect(url);
-    }
+  if (isPublicPath(pathname)) {
     return NextResponse.next();
+  }
+
+  if (!session) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();

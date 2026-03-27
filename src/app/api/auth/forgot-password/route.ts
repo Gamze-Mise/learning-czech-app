@@ -3,12 +3,12 @@ import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendPasswordResetEmail } from "@/lib/email";
 import { jsonOk, logApiError } from "@/lib/api-response";
-
-const APP_URL =
-  process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+import { getPublicAppUrl } from "@/lib/public-app-url";
 
 const GENERIC_MESSAGE =
   "If an account exists for this email, we’ve sent password reset instructions.";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,14 +24,50 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Use raw select to avoid enum decode failures on full User rows.
-    const users = await prisma.$queryRaw<
-      Array<{ id: number; email: string; name: string | null; passwordHash: string | null }>
-    >`SELECT "id", "email", "name", "passwordHash" FROM "users" WHERE "email" = ${email} LIMIT 1`;
-    const user = users[0] ?? null;
+    const bodyIntent =
+      String(body?.intent ?? "")
+        .trim()
+        .toLowerCase() === "admin";
+    const headerIntent =
+      request.headers.get("x-password-reset-intent")?.trim().toLowerCase() ===
+      "admin";
+    const intent = bodyIntent || headerIntent ? "admin" : "user";
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        passwordHash: true,
+        role: true,
+      },
+    });
     const passwordHash = user?.passwordHash ?? null;
 
-    if (user && passwordHash) {
+    if (!user || !passwordHash) {
+      return jsonOk({
+        ok: true as const,
+        message: GENERIC_MESSAGE,
+      });
+    }
+
+    const isSuperAdmin =
+      String(user.role).replace(/["']/g, "").trim().toUpperCase() ===
+      "SUPER_ADMIN";
+
+    const allowedForIntent =
+      (intent === "admin" && isSuperAdmin) ||
+      (intent === "user" && !isSuperAdmin);
+
+    if (!allowedForIntent) {
+      return jsonOk({
+        ok: true as const,
+        message: GENERIC_MESSAGE,
+      });
+    }
+
+    {
       const token = randomBytes(32).toString("hex");
       const passwordResetExpires = new Date(Date.now() + 1000 * 60 * 60); // 1h
 
@@ -42,34 +78,29 @@ export async function POST(request: NextRequest) {
         WHERE "id" = ${user.id}
       `;
 
-      const resetUrl = `${APP_URL}/reset-password?token=${encodeURIComponent(token)}`;
+      const appUrl = getPublicAppUrl(request);
+      const resetBase = `${appUrl}/reset-password?token=${encodeURIComponent(token)}`;
+      const resetUrl =
+        intent === "admin"
+          ? `${resetBase}&intent=admin`
+          : resetBase;
       const emailResult = await sendPasswordResetEmail({
         to: user.email,
         name: user.name,
         resetUrl,
       });
 
-      if (
-        process.env.NODE_ENV !== "production" &&
-        (!emailResult.ok || !emailResult.delivered)
-      ) {
-        return jsonOk({
-          ok: true as const,
-          message: GENERIC_MESSAGE,
-          devResetUrl: resetUrl,
-        });
-      }
-
-      if (!emailResult.ok && process.env.NODE_ENV === "production") {
+      if (!emailResult.ok) {
+        await prisma.$executeRaw`
+          UPDATE "users"
+          SET "passwordResetToken" = NULL,
+              "passwordResetExpires" = NULL
+          WHERE "id" = ${user.id}
+        `;
         logApiError(
           "auth/forgot-password email",
           new Error(emailResult.error ?? "send failed")
         );
-        // Do not reveal delivery/backend state to clients.
-        return jsonOk({
-          ok: true as const,
-          message: GENERIC_MESSAGE,
-        });
       }
     }
 
@@ -79,7 +110,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (e) {
     logApiError("auth/forgot-password", e);
-    // Keep response generic even on DB/runtime errors to avoid leaking account/system state.
     return jsonOk({
       ok: true as const,
       message: GENERIC_MESSAGE,

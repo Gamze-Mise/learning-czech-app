@@ -200,13 +200,11 @@ export default function FlashcardsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <PageHeader
         title="Flashcard Practice"
         subtitle={`Card ${currentIndex + 1} of ${flashcards.length}`}
       />
 
-      {/* Progress Bar */}
       <div className="w-full bg-gray-200 rounded-full h-2">
         <div
           className="bg-blue-600 h-2 rounded-full transition-all duration-300"
@@ -216,7 +214,6 @@ export default function FlashcardsPage() {
         ></div>
       </div>
 
-      {/* Flashcard */}
       <div className="max-w-2xl mx-auto">
         <Card className="min-h-96">
           <div
@@ -224,7 +221,6 @@ export default function FlashcardsPage() {
             onClick={handleFlip}
             aria-label="Flip card"
           >
-            {/* Card Content */}
             <div
               className={`absolute inset-0 transition-transform duration-1000 ease-in-out ${
                 isFlipped ? "rotate-y-180" : ""
@@ -234,7 +230,6 @@ export default function FlashcardsPage() {
                 perspective: "1000px"
               }}
             >
-              {/* Front Side */}
               <div
                 className="absolute inset-0"
                 style={{
@@ -276,7 +271,6 @@ export default function FlashcardsPage() {
                 </div>
               </div>
 
-              {/* Back Side */}
               <div
                 className="absolute inset-0"
                 style={{
@@ -336,7 +330,6 @@ export default function FlashcardsPage() {
           </div>
         </Card>
       </div>
-      {/* Session Complete */}
       {isComplete && (
         <Card>
           <div className="text-center space-y-3">
@@ -373,7 +366,6 @@ export default function FlashcardsPage() {
         </Card>
       )}
 
-      {/* Navigation Controls */}
       <div className="flex justify-center items-center space-x-4">
         <Button
           onClick={handlePrevious}
@@ -416,7 +408,6 @@ export default function FlashcardsPage() {
         </Button>
       </div>
 
-      {/* Statistics */}
       <Card>
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Progress</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
@@ -447,7 +438,6 @@ export default function FlashcardsPage() {
         </div>
       </Card>
 
-      {/* Navigation */}
       <div className="flex flex-col sm:flex-row gap-4">
         <Button
           href={`/units/${unitId}/lessons/${lessonId}/practice`}

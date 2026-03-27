@@ -4,9 +4,7 @@ import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth/password";
 import { sendVerificationEmail } from "@/lib/email";
-
-const APP_URL =
-  process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+import { getPublicAppUrl } from "@/lib/public-app-url";
 
 export async function POST(request: NextRequest) {
   try {
@@ -44,7 +42,8 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const verifyUrl = `${APP_URL}/api/auth/verify-email?token=${encodeURIComponent(token)}`;
+    const appUrl = getPublicAppUrl(request);
+    const verifyUrl = `${appUrl}/api/auth/verify-email?token=${encodeURIComponent(token)}`;
     const emailResult = await sendVerificationEmail({
       to: email,
       name,

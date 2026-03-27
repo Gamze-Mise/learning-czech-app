@@ -11,6 +11,7 @@ function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token") ?? "";
+  const isAdminFlow = searchParams.get("intent") === "admin";
 
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -40,7 +41,9 @@ function ResetPasswordForm() {
         setError(data.error ?? "Could not reset password");
         return;
       }
-      router.push("/login?reset=1");
+      router.push(
+        isAdminFlow ? "/admin/login?reset=1" : "/login?reset=1"
+      );
       router.refresh();
     } catch {
       setError("Network error");
@@ -57,7 +60,11 @@ function ResetPasswordForm() {
           request a new reset.
         </p>
         <Link
-          href="/forgot-password"
+          href={
+            isAdminFlow
+              ? "/forgot-password?intent=admin&redirect=%2Fadmin%2Flogin"
+              : "/forgot-password"
+          }
           className="text-blue-600 font-medium text-sm"
         >
           Request a new link
@@ -112,9 +119,15 @@ function ResetPasswordForm() {
         </Button>
       </form>
       <p className="text-center text-sm text-gray-600 mt-6">
-        <Link href="/login" className="text-blue-600 font-medium">
-          Back to sign in
-        </Link>
+        {isAdminFlow ? (
+          <Link href="/admin/login" className="text-indigo-600 font-medium">
+            Back to Super Admin sign in
+          </Link>
+        ) : (
+          <Link href="/login" className="text-blue-600 font-medium">
+            Back to sign in
+          </Link>
+        )}
       </p>
     </Card>
   );

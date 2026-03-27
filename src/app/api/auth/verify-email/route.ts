@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { logApiError } from "@/lib/api-response";
-
-const APP_URL =
-  process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+import { getPublicAppUrl } from "@/lib/public-app-url";
 
 export async function GET(request: NextRequest) {
+  const appUrl = getPublicAppUrl(request);
   const token = request.nextUrl.searchParams.get("token");
   if (!token) {
     return NextResponse.redirect(
-      new URL("/register?error=missing_token", APP_URL)
+      new URL("/register?error=missing_token", appUrl)
     );
   }
 
@@ -23,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     if (!user) {
       return NextResponse.redirect(
-        new URL("/register?error=invalid_token", APP_URL)
+        new URL("/register?error=invalid_token", appUrl)
       );
     }
 
@@ -36,11 +35,11 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.redirect(new URL("/login?verified=1", APP_URL));
+    return NextResponse.redirect(new URL("/login?verified=1", appUrl));
   } catch (error) {
     logApiError("auth/verify-email", error);
     return NextResponse.redirect(
-      new URL("/register?error=verification_failed", APP_URL)
+      new URL("/register?error=verification_failed", appUrl)
     );
   }
 }
