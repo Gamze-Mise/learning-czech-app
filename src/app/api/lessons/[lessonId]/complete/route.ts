@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSessionFromCookies } from "@/lib/auth/session";
+import { requireUserSession } from "@/lib/auth/require-user";
 import { internalError, jsonError, jsonOk, logApiError } from "@/lib/api-response";
 
 export async function POST(
@@ -9,10 +9,8 @@ export async function POST(
 ) {
   try {
     const { lessonId } = await context.params;
-    const session = await getSessionFromCookies();
-    if (!session) {
-      return jsonError("Unauthorized", 401);
-    }
+    const { session, response } = await requireUserSession();
+    if (!session) return response!;
     const userId = Number(session.sub);
     if (!Number.isFinite(userId)) {
       return jsonError("Invalid session", 401);

@@ -39,7 +39,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
     const url = request.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = session.role === "SUPER_ADMIN" ? "/admin" : "/";
     url.search = "";
     return NextResponse.redirect(url);
   }
@@ -56,6 +56,14 @@ export async function middleware(request: NextRequest) {
 
   if (isPublicPath(pathname)) {
     return NextResponse.next();
+  }
+
+  // Non-admin app routes must be accessed with a USER session (not SUPER_ADMIN).
+  if (session?.role === "SUPER_ADMIN") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/admin";
+    url.search = "";
+    return NextResponse.redirect(url);
   }
 
   if (!session) {

@@ -1,14 +1,12 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSessionFromCookies } from "@/lib/auth/session";
+import { requireUserSession } from "@/lib/auth/require-user";
 import { internalError, jsonError, jsonOk, logApiError } from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSessionFromCookies();
-    if (!session) {
-      return jsonError("Unauthorized", 401);
-    }
+    const { session, response } = await requireUserSession();
+    if (!session) return response!;
 
     const body = await request.json();
     const { exerciseId, correct, answer, timeSpent } = body;
