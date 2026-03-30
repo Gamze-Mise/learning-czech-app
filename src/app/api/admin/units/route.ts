@@ -9,7 +9,6 @@ export async function GET() {
 
   try {
     const units = await prisma.unit.findMany({
-      where: { isActive: true },
       orderBy: [{ courseId: "asc" }, { order: "asc" }],
       include: {
         course: { select: { id: true, title: true } },

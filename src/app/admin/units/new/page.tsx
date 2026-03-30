@@ -20,6 +20,11 @@ export default function NewUnitPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const initialCourseId = sp.get("courseId");
+    if (initialCourseId && /^\d+$/.test(initialCourseId)) {
+      setCourseId(initialCourseId);
+    }
     fetch("/api/admin/courses")
       .then((r) => r.json())
       .then((d) => setCourses(d.courses ?? []))

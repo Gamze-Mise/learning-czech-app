@@ -15,6 +15,7 @@ const LESSON_TYPES = [
 type UnitOption = {
   id: number;
   title: string;
+  isActive: boolean;
   course: { title: string | null } | null;
 };
 
@@ -32,6 +33,11 @@ export default function NewLessonPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const initialUnitId = sp.get("unitId");
+    if (initialUnitId && /^\d+$/.test(initialUnitId)) {
+      setUnitId(initialUnitId);
+    }
     fetch("/api/admin/units")
       .then((r) => r.json())
       .then((d) => setUnits(d.units ?? []))
@@ -102,7 +108,9 @@ export default function NewLessonPage() {
             <option value="">Select unit…</option>
             {units.map((u) => (
               <option key={u.id} value={u.id}>
-                {u.title} {u.course?.title ? `— ${u.course.title}` : ""}
+                {u.title}
+                {!u.isActive ? " (Passive)" : ""}
+                {u.course?.title ? ` — ${u.course.title}` : ""}
               </option>
             ))}
           </select>
