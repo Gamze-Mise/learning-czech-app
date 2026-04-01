@@ -41,13 +41,9 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
     const body = await request.json();
     const data: Record<string, unknown> = {};
 
-    if (body.courseId !== undefined) {
-      data.courseId = body.courseId != null ? Number(body.courseId) : null;
-    }
     if (body.title != null) data.title = String(body.title).trim();
     if (body.description !== undefined)
       data.description = body.description ? String(body.description).trim() : null;
-    if (body.order != null) data.order = Number(body.order);
     if (body.level != null) data.level = Number(body.level);
     if (body.isActive != null) data.isActive = Boolean(body.isActive);
     if (body.thumbnail !== undefined)

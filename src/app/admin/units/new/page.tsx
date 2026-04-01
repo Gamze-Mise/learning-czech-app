@@ -4,32 +4,24 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-type CourseOption = { id: number; title: string };
-
 export default function NewUnitPage() {
   const router = useRouter();
-  const [courses, setCourses] = useState<CourseOption[]>([]);
-  const [courseId, setCourseId] = useState<string>("");
   const [title, setTitle] = useState("");
-  const [order, setOrder] = useState("1");
   const [level, setLevel] = useState("1");
   const [description, setDescription] = useState("");
   const [thumbnail, setThumbnail] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successOpen, setSuccessOpen] = useState(false);
 
   useEffect(() => {
-    const sp = new URLSearchParams(window.location.search);
-    const initialCourseId = sp.get("courseId");
-    if (initialCourseId && /^\d+$/.test(initialCourseId)) {
-      setCourseId(initialCourseId);
-    }
-    fetch("/api/admin/courses")
-      .then((r) => r.json())
-      .then((d) => setCourses(d.courses ?? []))
-      .catch(() => setCourses([]));
-  }, []);
+    if (!successOpen) return;
+    const t = window.setTimeout(() => {
+      router.push("/admin/units");
+    }, 2500);
+    return () => window.clearTimeout(t);
+  }, [successOpen, router]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -40,9 +32,7 @@ export default function NewUnitPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          courseId: courseId ? Number(courseId) : null,
           title,
-          order: Number(order) || 1,
           level: Number(level) || 1,
           description: description.trim() || null,
           thumbnail: thumbnail.trim() || null,
@@ -54,7 +44,7 @@ export default function NewUnitPage() {
         setError(data.error ?? "Create failed");
         return;
       }
-      router.push(`/admin/units/${data.unit.id}`);
+      setSuccessOpen(true);
     } catch {
       setError("Network error");
     } finally {
@@ -64,6 +54,47 @@ export default function NewUnitPage() {
 
   return (
     <div className="max-w-xl space-y-6">
+      {successOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="unit-create-success-title"
+        >
+          <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-xl ring-1 ring-black/5 animate-pulse">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <span className="absolute inset-0 rounded-full bg-emerald-500/20 motion-safe:animate-ping" />
+                <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-white shadow motion-safe:animate-bounce">
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.704 5.29a1 1 0 0 1 .006 1.415l-7.5 7.6a1 1 0 0 1-1.42.004L3.296 9.814a1 1 0 1 1 1.408-1.42l3.083 3.06 6.793-6.887a1 1 0 0 1 1.424.723Z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <div>
+                <h2
+                  id="unit-create-success-title"
+                  className="text-base font-semibold text-slate-900"
+                >
+                  Oluşturuldu
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">Listeye dönülüyor…</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="mt-5 w-full rounded-xl bg-slate-900 py-2.5 text-center text-sm font-medium text-white hover:bg-slate-800"
+              onClick={() => router.push("/admin/units")}
+            >
+              Listeye dön
+            </button>
+          </div>
+        </div>
+      )}
       <div>
         <Link href="/admin/units" className="text-sm text-indigo-600 hover:underline">
           ← Back to units
@@ -81,24 +112,6 @@ export default function NewUnitPage() {
 
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
-            Course
-          </label>
-          <select
-            value={courseId}
-            onChange={(e) => setCourseId(e.target.value)}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
-          >
-            <option value="">(No course)</option>
-            {courses.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.title}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
             Title *
           </label>
           <input
@@ -109,31 +122,17 @@ export default function NewUnitPage() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Order
-            </label>
-            <input
-              type="number"
-              min={1}
-              value={order}
-              onChange={(e) => setOrder(e.target.value)}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Level
-            </label>
-            <input
-              type="number"
-              min={1}
-              value={level}
-              onChange={(e) => setLevel(e.target.value)}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
-            />
-          </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">
+            Level
+          </label>
+          <input
+            type="number"
+            min={1}
+            value={level}
+            onChange={(e) => setLevel(e.target.value)}
+            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
+          />
         </div>
 
         <div>

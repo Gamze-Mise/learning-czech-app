@@ -8,29 +8,29 @@ datasource db {
 }
 
 model User {
-  id              Int                 @id @default(autoincrement())
-  email           String              @unique
-  name            String?
-  passwordHash    String?
-  emailVerified   DateTime?
-  verificationToken     String?     @unique
-  verificationExpires     DateTime?
-  passwordResetToken    String?     @unique
-  passwordResetExpires  DateTime?
-  avatar          String?
-  role            UserRole            @default(USER)
-  level           Int                 @default(1)
-  streak          Int                 @default(0)
-  totalXP         Int                 @default(0)
-  lastActiveAt    DateTime            @default(now())
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-  exerciseResults ExerciseResult[]
-  progresses      FlashcardProgress[]
-  sessions        StudySession[]
-  achievements    UserAchievement[]
-  preferences     UserPreferences?
-  stats           UserStats?
+  id                   Int                 @id @default(autoincrement())
+  email                String              @unique
+  name                 String?
+  avatar               String?
+  role                 UserRole            @default(USER)
+  level                Int                 @default(1)
+  streak               Int                 @default(0)
+  totalXP              Int                 @default(0)
+  lastActiveAt         DateTime            @default(now())
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  passwordHash         String?
+  emailVerified        DateTime?
+  verificationToken    String?             @unique
+  verificationExpires  DateTime?
+  passwordResetToken   String?             @unique
+  passwordResetExpires DateTime?
+  exerciseResults      ExerciseResult[]
+  progresses           FlashcardProgress[]
+  sessions             StudySession[]
+  achievements         UserAchievement[]
+  preferences          UserPreferences?
+  stats                UserStats?
 
   @@map("users")
 }
@@ -96,7 +96,7 @@ model Courses {
 
 model Unit {
   id          Int      @id @default(autoincrement())
-  courseId    Int?
+  courseId    Int?     @default(1)
   title       String
   order       Int
   description String?
@@ -106,7 +106,7 @@ model Unit {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   lessons     Lesson[]
-  course      Courses?  @relation(fields: [courseId], references: [id], map: "unit_course_fkey")
+  course      Courses? @relation(fields: [courseId], references: [id], map: "unit_course_fkey")
 
   @@index([courseId], map: "units_courseId_fkey")
   @@map("units")
@@ -264,24 +264,24 @@ model StudySession {
 }
 
 model UserStats {
-  id              Int       @id @default(autoincrement())
-  userId          Int       @unique
-  totalStudyTime  Int       @default(0)
-  totalFlashcards Int       @default(0)
-  totalExercises  Int       @default(0)
-  lessonsCompleted Int      @default(0)
-  correctAnswers  Int       @default(0)
-  totalAnswers    Int       @default(0)
-  longestStreak   Int       @default(0)
-  currentStreak   Int       @default(0)
-  lastStudyDate   DateTime?
-  weeklyGoal      Int       @default(50)
-  weeklyProgress  Int       @default(0)
-  level           Int       @default(1)
-  xp              Int       @default(0)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               Int       @id @default(autoincrement())
+  userId           Int       @unique
+  totalStudyTime   Int       @default(0)
+  totalFlashcards  Int       @default(0)
+  totalExercises   Int       @default(0)
+  correctAnswers   Int       @default(0)
+  totalAnswers     Int       @default(0)
+  longestStreak    Int       @default(0)
+  currentStreak    Int       @default(0)
+  lastStudyDate    DateTime?
+  weeklyGoal       Int       @default(50)
+  weeklyProgress   Int       @default(0)
+  level            Int       @default(1)
+  xp               Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  lessonsCompleted Int       @default(0)
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_stats")
 }
@@ -289,9 +289,9 @@ model UserStats {
 enum UserRole {
   USER
   ADMIN
-  SUPER_ADMIN
   TEACHER
   MODERATOR
+  SUPER_ADMIN
 }
 
 enum LessonType {

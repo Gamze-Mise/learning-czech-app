@@ -4,7 +4,6 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-type CourseOption = { id: number; title: string };
 type UnitDetail = {
   id: number;
   title: string;
@@ -26,7 +25,6 @@ export default function EditUnitPage({
   const { id } = use(params);
   const router = useRouter();
   const [unit, setUnit] = useState<UnitDetail | null>(null);
-  const [courses, setCourses] = useState<CourseOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -40,13 +38,6 @@ export default function EditUnitPage({
     }, 2500);
     return () => window.clearTimeout(t);
   }, [saveSuccessOpen, router]);
-
-  useEffect(() => {
-    fetch("/api/admin/courses")
-      .then((r) => r.json())
-      .then((d) => setCourses(d.courses ?? []))
-      .catch(() => setCourses([]));
-  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -77,9 +68,7 @@ export default function EditUnitPage({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          courseId: unit.courseId,
           title: unit.title,
-          order: unit.order,
           level: unit.level,
           description: unit.description,
           thumbnail: unit.thumbnail,
@@ -244,29 +233,6 @@ export default function EditUnitPage({
 
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
-            Course
-          </label>
-          <select
-            value={unit.courseId ?? ""}
-            onChange={(e) =>
-              setUnit({
-                ...unit,
-                courseId: e.target.value ? Number(e.target.value) : null,
-              })
-            }
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
-          >
-            <option value="">(No course)</option>
-            {courses.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.title}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
             Title
           </label>
           <input
@@ -276,31 +242,17 @@ export default function EditUnitPage({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Order
-            </label>
-            <input
-              type="number"
-              min={1}
-              value={unit.order}
-              onChange={(e) => setUnit({ ...unit, order: Number(e.target.value) })}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Level
-            </label>
-            <input
-              type="number"
-              min={1}
-              value={unit.level}
-              onChange={(e) => setUnit({ ...unit, level: Number(e.target.value) })}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
-            />
-          </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">
+            Level
+          </label>
+          <input
+            type="number"
+            min={1}
+            value={unit.level}
+            onChange={(e) => setUnit({ ...unit, level: Number(e.target.value) })}
+            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
+          />
         </div>
 
         <div>
