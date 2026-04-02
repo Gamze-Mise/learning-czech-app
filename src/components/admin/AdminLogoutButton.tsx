@@ -18,7 +18,7 @@ export default function AdminLogoutButton() {
     <button
       type="button"
       onClick={logout}
-      className="text-xs text-slate-500 hover:text-red-400 w-full text-left"
+      className="w-full rounded-lg border border-slate-700/80 bg-slate-800/50 px-3 py-2 text-left text-xs font-medium text-slate-300 transition hover:border-red-500/40 hover:bg-red-950/30 hover:text-red-200"
     >
       Sign out
     </button>
