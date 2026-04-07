@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import AdminPageHeader, {
+  adminPrimaryButtonClass,
+} from "@/components/admin/AdminPageHeader";
 
 const LESSON_TYPES = [
   "VOCABULARY",
@@ -23,14 +26,36 @@ export default function NewLessonPage() {
   const router = useRouter();
   const [units, setUnits] = useState<UnitOption[]>([]);
   const [unitId, setUnitId] = useState("");
+  const [unitQuery, setUnitQuery] = useState("");
   const [title, setTitle] = useState("");
-  const [order, setOrder] = useState("1");
   const [description, setDescription] = useState("");
   const [type, setType] = useState<string>("VOCABULARY");
   const [difficulty, setDifficulty] = useState("1");
   const [estimatedTime, setEstimatedTime] = useState("");
+  const [isActive, setIsActive] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successOpen, setSuccessOpen] = useState(false);
+
+  const filteredUnits = useMemo(() => {
+    const q = unitQuery.trim().toLowerCase();
+    if (!q) return units;
+    return units.filter((u) => {
+      const courseTitle = u.course?.title ?? "";
+      return (
+        u.title.toLowerCase().includes(q) ||
+        courseTitle.toLowerCase().includes(q)
+      );
+    });
+  }, [units, unitQuery]);
+
+  useEffect(() => {
+    if (!successOpen) return;
+    const t = window.setTimeout(() => {
+      router.push("/admin/lessons");
+    }, 2500);
+    return () => window.clearTimeout(t);
+  }, [successOpen, router]);
 
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
@@ -55,12 +80,11 @@ export default function NewLessonPage() {
         body: JSON.stringify({
           unitId: Number(unitId),
           title: title.trim(),
-          order: Number(order) || 1,
           description: description.trim() || null,
           type,
           difficulty: Number(difficulty) || 1,
           estimatedTime: estimatedTime ? Number(estimatedTime) : null,
-          isActive: true,
+          isActive,
         }),
       });
       const data = await res.json();
@@ -68,7 +92,7 @@ export default function NewLessonPage() {
         setError(data.error ?? "Failed to create");
         return;
       }
-      router.push(`/admin/lessons/${data.lesson.id}`);
+      setSuccessOpen(true);
     } catch {
       setError("Network error");
     } finally {
@@ -77,24 +101,78 @@ export default function NewLessonPage() {
   }
 
   return (
-    <div className="max-w-xl space-y-6">
-      <div>
-        <Link
-          href="/admin/lessons"
-          className="text-sm text-blue-600 hover:underline"
+    <div className="max-w-xl space-y-8">
+      {successOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="lesson-create-success-title"
         >
-          ← Back to lessons
-        </Link>
-        <h1 className="text-2xl font-bold text-slate-900 mt-2">New lesson</h1>
-      </div>
+          <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-xl ring-1 ring-black/5 animate-pulse">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <span className="absolute inset-0 rounded-full bg-emerald-500/20 motion-safe:animate-ping" />
+                <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-white shadow motion-safe:animate-bounce">
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.704 5.29a1 1 0 0 1 .006 1.415l-7.5 7.6a1 1 0 0 1-1.42.004L3.296 9.814a1 1 0 1 1 1.408-1.42l3.083 3.06 6.793-6.887a1 1 0 0 1 1.424.723Z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <div>
+                <h2
+                  id="lesson-create-success-title"
+                  className="text-base font-semibold text-slate-900"
+                >
+                  Oluşturuldu
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">Listeye dönülüyor…</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="mt-5 w-full rounded-xl bg-slate-900 py-2.5 text-center text-sm font-medium text-white hover:bg-slate-800"
+              onClick={() => router.push("/admin/lessons")}
+            >
+              Listeye dön
+            </button>
+          </div>
+        </div>
+      )}
+
+      <AdminPageHeader
+        title="New lesson"
+        description="Create a lesson inside a unit. Order is assigned automatically."
+        action={
+          <Link href="/admin/lessons" className="text-sm font-medium text-slate-600 hover:text-slate-900">
+            ← Back
+          </Link>
+        }
+      />
 
       <form
         onSubmit={onSubmit}
-        className="space-y-4 bg-white border border-slate-200 rounded-xl p-6 shadow-sm"
+        className="space-y-5 bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm"
       >
         {error && (
           <p className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">{error}</p>
         )}
+        <div className="grid gap-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Find unit
+            </label>
+            <input
+              value={unitQuery}
+              onChange={(e) => setUnitQuery(e.target.value)}
+              placeholder="Search by unit or course…"
+              className="w-full border border-slate-300 rounded-xl px-3 py-2 text-slate-900"
+            />
+          </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
             Unit *
@@ -103,10 +181,10 @@ export default function NewLessonPage() {
             required
             value={unitId}
             onChange={(e) => setUnitId(e.target.value)}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
+            className="w-full border border-slate-300 rounded-xl px-3 py-2 text-slate-900"
           >
             <option value="">Select unit…</option>
-            {units.map((u) => (
+            {filteredUnits.map((u) => (
               <option key={u.id} value={u.id}>
                 {u.title}
                 {!u.isActive ? " (Passive)" : ""}
@@ -114,6 +192,7 @@ export default function NewLessonPage() {
               </option>
             ))}
           </select>
+        </div>
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -123,22 +202,10 @@ export default function NewLessonPage() {
             required
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
+            className="w-full border border-slate-300 rounded-xl px-3 py-2 text-slate-900"
           />
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Order
-            </label>
-            <input
-              type="number"
-              min={1}
-              value={order}
-              onChange={(e) => setOrder(e.target.value)}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
-            />
-          </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
               Difficulty
@@ -149,7 +216,20 @@ export default function NewLessonPage() {
               max={5}
               value={difficulty}
               onChange={(e) => setDifficulty(e.target.value)}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
+              className="w-full border border-slate-300 rounded-xl px-3 py-2 text-slate-900"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Estimated time
+            </label>
+            <input
+              type="number"
+              min={0}
+              value={estimatedTime}
+              onChange={(e) => setEstimatedTime(e.target.value)}
+              className="w-full border border-slate-300 rounded-xl px-3 py-2 text-slate-900"
+              placeholder="minutes"
             />
           </div>
         </div>
@@ -160,7 +240,7 @@ export default function NewLessonPage() {
           <select
             value={type}
             onChange={(e) => setType(e.target.value)}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
+            className="w-full border border-slate-300 rounded-xl px-3 py-2 text-slate-900"
           >
             {LESSON_TYPES.map((t) => (
               <option key={t} value={t}>
@@ -177,26 +257,39 @@ export default function NewLessonPage() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
+            className="w-full border border-slate-300 rounded-xl px-3 py-2 text-slate-900"
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
-            Estimated time (minutes)
-          </label>
-          <input
-            type="number"
-            min={0}
-            value={estimatedTime}
-            onChange={(e) => setEstimatedTime(e.target.value)}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
-            placeholder="Optional"
-          />
+
+        <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <div>
+            <p className="text-sm font-medium text-slate-900">Status</p>
+            <p className="text-xs text-slate-600 mt-0.5">
+              {isActive ? "Active (visible in app)" : "Passive (hidden in app)"}
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isActive}
+            onClick={() => setIsActive(!isActive)}
+            className={[
+              "relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
+              isActive ? "bg-indigo-600" : "bg-slate-300",
+            ].join(" ")}
+          >
+            <span
+              className={[
+                "inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform",
+                isActive ? "translate-x-6" : "translate-x-1",
+              ].join(" ")}
+            />
+          </button>
         </div>
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:opacity-50"
+          className={adminPrimaryButtonClass + (loading ? " opacity-60" : "")}
         >
           {loading ? "Saving…" : "Create lesson"}
         </button>

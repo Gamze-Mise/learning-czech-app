@@ -44,7 +44,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const unitId = Number(body.unitId);
     const title = String(body.title ?? "").trim();
-    const order = Number(body.order ?? 1);
     const description = body.description
       ? String(body.description).trim()
       : null;
@@ -62,6 +61,14 @@ export async function POST(request: NextRequest) {
     if (!unit) {
       return jsonError("Unit not found", 404);
     }
+
+    // Order is assigned automatically within the unit (append).
+    const last = await prisma.lesson.findFirst({
+      where: { unitId },
+      orderBy: { order: "desc" },
+      select: { order: true },
+    });
+    const order = (last?.order ?? 0) + 1;
 
     const lesson = await prisma.lesson.create({
       data: {

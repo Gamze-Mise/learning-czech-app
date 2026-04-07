@@ -3,6 +3,9 @@
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import AdminPageHeader, {
+  adminPrimaryButtonClass,
+} from "@/components/admin/AdminPageHeader";
 
 type UnitDetail = {
   id: number;
@@ -93,12 +96,6 @@ export default function EditUnitPage({
     }
   }
 
-  async function deactivate() {
-    if (!confirm("Deactivate this unit?")) return;
-    await fetch(`/api/admin/units/${id}`, { method: "DELETE" });
-    router.push("/admin/units");
-  }
-
   if (loading) return <p className="text-slate-600">Loading…</p>;
   if (!unit) {
     return (
@@ -112,7 +109,7 @@ export default function EditUnitPage({
   }
 
   return (
-    <div className="max-w-xl space-y-6 relative">
+    <div className="max-w-xl space-y-8 relative">
       {saveSuccessOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
@@ -153,14 +150,20 @@ export default function EditUnitPage({
           </div>
         </div>
       )}
-      <div>
-        <Link href="/admin/units" className="text-sm text-indigo-600 hover:underline">
-          ← Back to units
-        </Link>
-        <h1 className="text-2xl font-bold text-slate-900 mt-2">Edit unit</h1>
-      </div>
+      <AdminPageHeader
+        title="Edit unit"
+        description="Edit unit details, visibility, and manage lessons."
+        action={
+          <Link
+            href="/admin/units"
+            className="text-sm font-medium text-slate-600 hover:text-slate-900"
+          >
+            ← Back
+          </Link>
+        }
+      />
 
-      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="font-semibold text-slate-900">Lessons in this unit</h2>
@@ -170,13 +173,13 @@ export default function EditUnitPage({
           </div>
           <Link
             href={`/admin/lessons/new?unitId=${encodeURIComponent(String(unit.id))}`}
-            className="shrink-0 inline-flex items-center justify-center px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+            className={adminPrimaryButtonClass}
           >
             + New lesson
           </Link>
         </div>
 
-        <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200">
+        <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
           <table className="min-w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-left text-slate-500">
@@ -225,7 +228,7 @@ export default function EditUnitPage({
 
       <form
         onSubmit={onSubmit}
-        className="space-y-4 bg-white border border-slate-200 rounded-xl p-6 shadow-sm"
+        className="space-y-5 bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm"
       >
         {saveError && (
           <p className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">{saveError}</p>
@@ -238,7 +241,7 @@ export default function EditUnitPage({
           <input
             value={unit.title}
             onChange={(e) => setUnit({ ...unit, title: e.target.value })}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
+            className="w-full border border-slate-300 rounded-xl px-3 py-2 text-slate-900"
           />
         </div>
 
@@ -251,7 +254,7 @@ export default function EditUnitPage({
             min={1}
             value={unit.level}
             onChange={(e) => setUnit({ ...unit, level: Number(e.target.value) })}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
+            className="w-full border border-slate-300 rounded-xl px-3 py-2 text-slate-900"
           />
         </div>
 
@@ -263,7 +266,7 @@ export default function EditUnitPage({
             value={unit.description ?? ""}
             onChange={(e) => setUnit({ ...unit, description: e.target.value || null })}
             rows={4}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
+            className="w-full border border-slate-300 rounded-xl px-3 py-2 text-slate-900"
           />
         </div>
 
@@ -274,12 +277,12 @@ export default function EditUnitPage({
           <input
             value={unit.thumbnail ?? ""}
             onChange={(e) => setUnit({ ...unit, thumbnail: e.target.value || null })}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
+            className="w-full border border-slate-300 rounded-xl px-3 py-2 text-slate-900"
             placeholder="https://…"
           />
         </div>
 
-        <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+        <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
           <div>
             <p className="text-sm font-medium text-slate-900">Status</p>
             <p className="text-xs text-slate-600 mt-0.5">
@@ -308,7 +311,7 @@ export default function EditUnitPage({
         <button
           type="submit"
           disabled={saving}
-          className="w-full py-2.5 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 disabled:opacity-50"
+          className={adminPrimaryButtonClass + (saving ? " opacity-60" : "")}
         >
           {saving ? "Saving…" : "Save changes"}
         </button>

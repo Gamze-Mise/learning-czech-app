@@ -3,6 +3,9 @@
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import AdminPageHeader, {
+  adminPrimaryButtonClass,
+} from "@/components/admin/AdminPageHeader";
 
 const LESSON_TYPES = [
   "VOCABULARY",
@@ -38,8 +41,18 @@ export default function EditLessonPage({
   const [lesson, setLesson] = useState<LessonDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccessOpen, setSaveSuccessOpen] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!saveSuccessOpen) return;
+    const t = window.setTimeout(() => {
+      setSaveSuccessOpen(false);
+    }, 2200);
+    return () => window.clearTimeout(t);
+  }, [saveSuccessOpen]);
 
   const [newPart, setNewPart] = useState({
     order: "1",
@@ -87,7 +100,7 @@ export default function EditLessonPage({
         return r.json();
       })
       .then((d) => setLesson(d.lesson))
-      .catch(() => setError("Lesson not found"))
+      .catch(() => setLoadError("Lesson not found"))
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -101,7 +114,7 @@ export default function EditLessonPage({
     e.preventDefault();
     if (!lesson) return;
     setBusy("part");
-    setError(null);
+    setSaveError(null);
     try {
       const res = await fetch(`/api/admin/lessons/${lesson.id}/parts`, {
         method: "POST",
@@ -119,7 +132,7 @@ export default function EditLessonPage({
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Failed to add part");
+        setSaveError(data.error ?? "Failed to add part");
         return;
       }
       setNewPart({
@@ -133,7 +146,7 @@ export default function EditLessonPage({
       });
       await refreshLesson();
     } catch {
-      setError("Network error");
+      setSaveError("Network error");
     } finally {
       setBusy(null);
     }
@@ -167,7 +180,7 @@ export default function EditLessonPage({
   async function savePart(partId: number) {
     if (!lesson || !partDraft) return;
     setBusy("part");
-    setError(null);
+    setSaveError(null);
     try {
       const res = await fetch(`/api/admin/lessons/${lesson.id}/parts/${partId}`, {
         method: "PATCH",
@@ -185,14 +198,14 @@ export default function EditLessonPage({
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Failed to update part");
+        setSaveError(data.error ?? "Failed to update part");
         return;
       }
       setEditingPartId(null);
       setPartDraft(null);
       await refreshLesson();
     } catch {
-      setError("Network error");
+      setSaveError("Network error");
     } finally {
       setBusy(null);
     }
@@ -202,7 +215,7 @@ export default function EditLessonPage({
     e.preventDefault();
     if (!lesson) return;
     setBusy("card");
-    setError(null);
+    setSaveError(null);
     try {
       const res = await fetch(`/api/admin/lessons/${lesson.id}/flashcards`, {
         method: "POST",
@@ -221,7 +234,7 @@ export default function EditLessonPage({
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Failed to add flashcard");
+        setSaveError(data.error ?? "Failed to add flashcard");
         return;
       }
       setNewCard({
@@ -236,7 +249,7 @@ export default function EditLessonPage({
       });
       await refreshLesson();
     } catch {
-      setError("Network error");
+      setSaveError("Network error");
     } finally {
       setBusy(null);
     }
@@ -271,7 +284,7 @@ export default function EditLessonPage({
   async function saveCard(cardId: number) {
     if (!lesson || !cardDraft) return;
     setBusy("card");
-    setError(null);
+    setSaveError(null);
     try {
       const res = await fetch(
         `/api/admin/lessons/${lesson.id}/flashcards/${cardId}`,
@@ -293,14 +306,14 @@ export default function EditLessonPage({
       );
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Failed to update flashcard");
+        setSaveError(data.error ?? "Failed to update flashcard");
         return;
       }
       setEditingCardId(null);
       setCardDraft(null);
       await refreshLesson();
     } catch {
-      setError("Network error");
+      setSaveError("Network error");
     } finally {
       setBusy(null);
     }
@@ -310,7 +323,7 @@ export default function EditLessonPage({
     e.preventDefault();
     if (!lesson) return;
     setBusy("ex");
-    setError(null);
+    setSaveError(null);
     try {
       const res = await fetch(`/api/admin/lessons/${lesson.id}/exercises`, {
         method: "POST",
@@ -332,7 +345,7 @@ export default function EditLessonPage({
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Failed to add exercise");
+        setSaveError(data.error ?? "Failed to add exercise");
         return;
       }
       setNewEx({
@@ -350,7 +363,7 @@ export default function EditLessonPage({
       });
       await refreshLesson();
     } catch {
-      setError("Network error");
+      setSaveError("Network error");
     } finally {
       setBusy(null);
     }
@@ -388,7 +401,7 @@ export default function EditLessonPage({
   async function saveExercise(exerciseId: number) {
     if (!lesson || !exDraft) return;
     setBusy("ex");
-    setError(null);
+    setSaveError(null);
     try {
       const res = await fetch(
         `/api/admin/lessons/${lesson.id}/exercises/${exerciseId}`,
@@ -413,14 +426,14 @@ export default function EditLessonPage({
       );
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Failed to update exercise");
+        setSaveError(data.error ?? "Failed to update exercise");
         return;
       }
       setEditingExId(null);
       setExDraft(null);
       await refreshLesson();
     } catch {
-      setError("Network error");
+      setSaveError("Network error");
     } finally {
       setBusy(null);
     }
@@ -430,7 +443,7 @@ export default function EditLessonPage({
     e.preventDefault();
     if (!lesson) return;
     setSaving(true);
-    setError(null);
+    setSaveError(null);
     try {
       const res = await fetch(`/api/admin/lessons/${id}`, {
         method: "PATCH",
@@ -447,12 +460,13 @@ export default function EditLessonPage({
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Update failed");
+        setSaveError(data.error ?? "Update failed");
         return;
       }
       setLesson(data.lesson);
+      setSaveSuccessOpen(true);
     } catch {
-      setError("Network error");
+      setSaveError("Network error");
     } finally {
       setSaving(false);
     }
@@ -468,10 +482,10 @@ export default function EditLessonPage({
   if (loading) {
     return <p className="text-slate-600">Loading…</p>;
   }
-  if (error || !lesson) {
+  if (loadError || !lesson) {
     return (
       <div>
-        <p className="text-red-600">{error ?? "Not found"}</p>
+        <p className="text-red-600">{loadError ?? "Not found"}</p>
         <Link href="/admin/lessons" className="text-blue-600">
           ← Back
         </Link>
@@ -481,25 +495,64 @@ export default function EditLessonPage({
 
   return (
     <div className="max-w-4xl space-y-8">
-      <div>
-        <Link
-          href="/admin/lessons"
-          className="text-sm text-blue-600 hover:underline"
+      {saveSuccessOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="lesson-save-success-title"
         >
-          ← Back to lessons
-        </Link>
-        <h1 className="text-2xl font-bold text-slate-900 mt-2">Edit lesson</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Unit: {lesson.unit.title} (ID {lesson.unitId})
-        </p>
-      </div>
+          <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-xl ring-1 ring-black/5 animate-pulse">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <span className="absolute inset-0 rounded-full bg-emerald-500/20 motion-safe:animate-ping" />
+                <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-white shadow motion-safe:animate-bounce">
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.704 5.29a1 1 0 0 1 .006 1.415l-7.5 7.6a1 1 0 0 1-1.42.004L3.296 9.814a1 1 0 1 1 1.408-1.42l3.083 3.06 6.793-6.887a1 1 0 0 1 1.424.723Z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <div>
+                <h2
+                  id="lesson-save-success-title"
+                  className="text-base font-semibold text-slate-900"
+                >
+                  Kaydedildi
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">Değişiklikler uygulandı</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="mt-5 w-full rounded-xl bg-slate-900 py-2.5 text-center text-sm font-medium text-white hover:bg-slate-800"
+              onClick={() => setSaveSuccessOpen(false)}
+            >
+              Tamam
+            </button>
+          </div>
+        </div>
+      )}
+
+      <AdminPageHeader
+        title="Edit lesson"
+        description={`Unit: ${lesson.unit.title} (ID ${lesson.unitId})`}
+        action={
+          <Link href="/admin/lessons" className="text-sm font-medium text-slate-600 hover:text-slate-900">
+            ← Back
+          </Link>
+        }
+      />
 
       <form
         onSubmit={onSubmit}
-        className="space-y-4 bg-white border border-slate-200 rounded-xl p-6 shadow-sm"
+        className="space-y-5 bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm"
       >
-        {error && (
-          <p className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">{error}</p>
+        {saveError && (
+          <p className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">{saveError}</p>
         )}
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -594,20 +647,35 @@ export default function EditLessonPage({
             className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
           />
         </div>
-        <label className="flex items-center gap-2 text-slate-700">
-          <input
-            type="checkbox"
-            checked={lesson.isActive}
-            onChange={(e) =>
-              setLesson({ ...lesson, isActive: e.target.checked })
-            }
-          />
-          Active (visible in app)
-        </label>
+        <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <div>
+            <p className="text-sm font-medium text-slate-900">Status</p>
+            <p className="text-xs text-slate-600 mt-0.5">
+              {lesson.isActive ? "Active (visible in app)" : "Passive (hidden in app)"}
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={lesson.isActive}
+            onClick={() => setLesson({ ...lesson, isActive: !lesson.isActive })}
+            className={[
+              "relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
+              lesson.isActive ? "bg-indigo-600" : "bg-slate-300",
+            ].join(" ")}
+          >
+            <span
+              className={[
+                "inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform",
+                lesson.isActive ? "translate-x-6" : "translate-x-1",
+              ].join(" ")}
+            />
+          </button>
+        </div>
         <button
           type="submit"
           disabled={saving}
-          className="w-full py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:opacity-50"
+          className={adminPrimaryButtonClass + (saving ? " opacity-60" : "")}
         >
           {saving ? "Saving…" : "Save changes"}
         </button>

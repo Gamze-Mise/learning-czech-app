@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import AdminPageHeader, {
+  adminPrimaryButtonClass,
+} from "@/components/admin/AdminPageHeader";
 
 export default function NewUnitPage() {
   const router = useRouter();
@@ -53,7 +56,7 @@ export default function NewUnitPage() {
   }
 
   return (
-    <div className="max-w-xl space-y-6">
+    <div className="max-w-xl space-y-8">
       {successOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
@@ -95,16 +98,22 @@ export default function NewUnitPage() {
           </div>
         </div>
       )}
-      <div>
-        <Link href="/admin/units" className="text-sm text-indigo-600 hover:underline">
-          ← Back to units
-        </Link>
-        <h1 className="text-2xl font-bold text-slate-900 mt-2">New unit</h1>
-      </div>
+      <AdminPageHeader
+        title="New unit"
+        description="Create a unit. Order is assigned automatically."
+        action={
+          <Link
+            href="/admin/units"
+            className="text-sm font-medium text-slate-600 hover:text-slate-900"
+          >
+            ← Back
+          </Link>
+        }
+      />
 
       <form
         onSubmit={onSubmit}
-        className="space-y-4 bg-white border border-slate-200 rounded-xl p-6 shadow-sm"
+        className="space-y-5 bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm"
       >
         {error && (
           <p className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">{error}</p>
@@ -118,7 +127,7 @@ export default function NewUnitPage() {
             required
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
+            className="w-full border border-slate-300 rounded-xl px-3 py-2 text-slate-900"
           />
         </div>
 
@@ -131,7 +140,7 @@ export default function NewUnitPage() {
             min={1}
             value={level}
             onChange={(e) => setLevel(e.target.value)}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
+            className="w-full border border-slate-300 rounded-xl px-3 py-2 text-slate-900"
           />
         </div>
 
@@ -143,7 +152,7 @@ export default function NewUnitPage() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={4}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
+            className="w-full border border-slate-300 rounded-xl px-3 py-2 text-slate-900"
           />
         </div>
 
@@ -154,24 +163,41 @@ export default function NewUnitPage() {
           <input
             value={thumbnail}
             onChange={(e) => setThumbnail(e.target.value)}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
+            className="w-full border border-slate-300 rounded-xl px-3 py-2 text-slate-900"
             placeholder="https://…"
           />
         </div>
 
-        <label className="flex items-center gap-2 text-slate-700">
-          <input
-            type="checkbox"
-            checked={isActive}
-            onChange={(e) => setIsActive(e.target.checked)}
-          />
-          Active
-        </label>
+        <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <div>
+            <p className="text-sm font-medium text-slate-900">Status</p>
+            <p className="text-xs text-slate-600 mt-0.5">
+              {isActive ? "Active (visible in app)" : "Passive (hidden in app)"}
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isActive}
+            onClick={() => setIsActive(!isActive)}
+            className={[
+              "relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
+              isActive ? "bg-indigo-600" : "bg-slate-300",
+            ].join(" ")}
+          >
+            <span
+              className={[
+                "inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform",
+                isActive ? "translate-x-6" : "translate-x-1",
+              ].join(" ")}
+            />
+          </button>
+        </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 disabled:opacity-50"
+          className={adminPrimaryButtonClass + (loading ? " opacity-60" : "")}
         >
           {loading ? "Creating…" : "Create unit"}
         </button>
