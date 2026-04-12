@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import Card from "@/components/Card";
 import Button from "@/components/Button";
-
-const USER_ID = 1; // TODO: replace with real auth
+import { devError } from "@/lib/logger";
 
 interface Flashcard {
   id: number;
@@ -17,13 +16,14 @@ interface Flashcard {
   example: string | null;
   difficulty: number;
   category: string;
-  tags: string[];
 }
 
 export default function FlashcardsPage() {
   const params = useParams();
+  const router = useRouter();
   const { id: unitId, lessonId } = params;
 
+  const [userId, setUserId] = useState<number | null>(null);
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -35,23 +35,34 @@ export default function FlashcardsPage() {
   >([]);
   const cardSeenAtRef = useRef<number | null>(null);
 
-  const fetchFlashcards = useCallback(async () => {
+  const load = useCallback(async () => {
     try {
+      setLoading(true);
+      const meRes = await fetch("/api/auth/me");
+      const meData = await meRes.json();
+      if (!meRes.ok || !meData.user) {
+        router.replace(
+          `/login?redirect=/units/${unitId}/lessons/${lessonId}/flashcards`
+        );
+        return;
+      }
+      setUserId(meData.user.id);
+
       const response = await fetch(`/api/flashcards/${lessonId}`);
       if (response.ok) {
         const data = await response.json();
         setFlashcards(data.flashcards || []);
       }
     } catch (error) {
-      console.error("Error fetching flashcards:", error);
+      devError("Error loading flashcards:", error);
     } finally {
       setLoading(false);
     }
-  }, [lessonId]);
+  }, [lessonId, unitId, router]);
 
   useEffect(() => {
-    void fetchFlashcards();
-  }, [fetchFlashcards]);
+    void load();
+  }, [load]);
 
   const handleFlip = () => {
     if (!isFlipped) cardSeenAtRef.current = Date.now();
@@ -65,21 +76,21 @@ export default function FlashcardsPage() {
 
   const reportProgress = async (result: "known" | "unknown") => {
     const card = flashcards[currentIndex];
-    if (!card || savingProgress) return;
+    if (!card || savingProgress || userId == null) return;
     setSavingProgress(true);
     try {
       await fetch("/api/flashcards/progress", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: USER_ID,
+          userId,
           flashcardId: card.id,
           result,
           studyTimeSeconds: studyTimeSeconds(),
         }),
       });
     } catch (e) {
-      console.error("Error saving flashcard progress:", e);
+      devError("Error saving flashcard progress:", e);
     } finally {
       setSavingProgress(false);
     }
@@ -146,7 +157,7 @@ export default function FlashcardsPage() {
   const playAudio = () => {
     if (flashcards[currentIndex]?.audioUrl) {
       const audio = new Audio(flashcards[currentIndex].audioUrl!);
-      audio.play().catch(console.error);
+      audio.play().catch(() => devError("Audio play failed"));
     }
   };
 

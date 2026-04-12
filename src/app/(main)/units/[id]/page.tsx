@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { devError } from "@/lib/logger";
 import PageHeader from "@/components/PageHeader";
 import Card from "@/components/Card";
 import ProgressBar from "@/components/ProgressBar";
@@ -35,6 +36,7 @@ interface Unit {
 
 export default function UnitPage() {
   const params = useParams();
+  const router = useRouter();
   const unitId = params.id as string;
 
   const [unit, setUnit] = useState<Unit | null>(null);
@@ -42,17 +44,25 @@ export default function UnitPage() {
 
   const fetchUnitProgress = useCallback(async () => {
     try {
-      const response = await fetch(`/api/units/${unitId}/progress?userId=1`);
+      const meRes = await fetch("/api/auth/me");
+      const meData = await meRes.json();
+      if (!meRes.ok || !meData.user) {
+        router.replace(`/login?redirect=/units/${unitId}`);
+        return;
+      }
+      const response = await fetch(
+        `/api/units/${unitId}/progress?userId=${meData.user.id}`
+      );
       if (response.ok) {
         const data = await response.json();
         setUnit(data.unit);
       }
     } catch (error) {
-      console.error("Error fetching unit progress:", error);
+      devError("Error fetching unit progress:", error);
     } finally {
       setLoading(false);
     }
-  }, [unitId]);
+  }, [unitId, router]);
 
   useEffect(() => {
     void fetchUnitProgress();

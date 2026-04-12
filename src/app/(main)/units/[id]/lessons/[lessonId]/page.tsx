@@ -6,6 +6,7 @@ import PageHeader from "@/components/PageHeader";
 import Card from "@/components/Card";
 import ProgressBar from "@/components/ProgressBar";
 import Button from "@/components/Button";
+import { devError } from "@/lib/logger";
 
 export default function LessonPage() {
   const params = useParams();
@@ -22,7 +23,7 @@ export default function LessonPage() {
         setLesson(data);
       }
     } catch (error) {
-      console.error("Error fetching lesson:", error);
+      devError("Error fetching lesson:", error);
     } finally {
       setLoading(false);
     }
@@ -40,8 +41,8 @@ export default function LessonPage() {
         );
       } else {
         const audio = new Audio(audioUrl);
-        audio.play().catch((error) => {
-          console.error("Audio play failed:", error);
+        audio.play().catch(() => {
+          devError("Audio play failed:", audioUrl);
           alert(`🎵 Audio file not found: ${audioUrl}`);
         });
       }

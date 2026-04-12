@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import AdminImageField from "@/components/admin/AdminImageField";
 
 export default function NewCoursePage() {
   const router = useRouter();
@@ -109,17 +110,12 @@ export default function NewCoursePage() {
             className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
-            Thumbnail URL
-          </label>
-          <input
-            value={thumbnail}
-            onChange={(e) => setThumbnail(e.target.value)}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
-            placeholder="https://…"
-          />
-        </div>
+        <AdminImageField
+          label="Thumbnail"
+          value={thumbnail}
+          onChange={setThumbnail}
+          description="Optional course cover — upload or paste a URL."
+        />
         <label className="flex items-center gap-2 text-slate-700">
           <input
             type="checkbox"

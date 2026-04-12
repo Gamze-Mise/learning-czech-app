@@ -63,12 +63,22 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
     if (body.estimatedTime !== undefined)
       data.estimatedTime =
         body.estimatedTime != null ? Number(body.estimatedTime) : null;
-    if (body.isActive != null) data.isActive = Boolean(body.isActive);
+    if (body.isActive !== undefined) data.isActive = Boolean(body.isActive);
     if (body.unitId != null) data.unitId = Number(body.unitId);
+    if (body.thumbnail !== undefined)
+      data.thumbnail = body.thumbnail
+        ? String(body.thumbnail).trim()
+        : null;
 
     const lesson = await prisma.lesson.update({
       where: { id: lessonId },
       data,
+      include: {
+        unit: true,
+        parts: { orderBy: { order: "asc" } },
+        flashcards: { orderBy: { order: "asc" } },
+        exercises: { orderBy: { order: "asc" } },
+      },
     });
 
     return jsonOk({ lesson });

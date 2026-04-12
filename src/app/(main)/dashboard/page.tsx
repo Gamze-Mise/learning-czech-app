@@ -5,6 +5,7 @@ import PageHeader from "@/components/PageHeader";
 import Card from "@/components/Card";
 import ProgressBar from "@/components/ProgressBar";
 import Button from "@/components/Button";
+import { devError } from "@/lib/logger";
 
 interface DashboardStats {
   overallProgress: number;
@@ -44,7 +45,7 @@ export default function DashboardPage() {
         setStats(data.stats);
       }
     } catch (error) {
-      console.error("Error fetching dashboard stats:", error);
+      devError("Error fetching dashboard stats:", error);
     } finally {
       setLoading(false);
     }

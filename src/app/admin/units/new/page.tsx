@@ -6,6 +6,7 @@ import Link from "next/link";
 import AdminPageHeader, {
   adminPrimaryButtonClass,
 } from "@/components/admin/AdminPageHeader";
+import AdminImageField from "@/components/admin/AdminImageField";
 
 export default function NewUnitPage() {
   const router = useRouter();
@@ -83,9 +84,9 @@ export default function NewUnitPage() {
                   id="unit-create-success-title"
                   className="text-base font-semibold text-slate-900"
                 >
-                  Oluşturuldu
+                  Created
                 </h2>
-                <p className="text-xs text-slate-500 mt-0.5">Listeye dönülüyor…</p>
+                <p className="text-xs text-slate-500 mt-0.5">Returning to the list…</p>
               </div>
             </div>
             <button
@@ -93,7 +94,7 @@ export default function NewUnitPage() {
               className="mt-5 w-full rounded-xl bg-slate-900 py-2.5 text-center text-sm font-medium text-white hover:bg-slate-800"
               onClick={() => router.push("/admin/units")}
             >
-              Listeye dön
+              Back to list
             </button>
           </div>
         </div>
@@ -156,17 +157,12 @@ export default function NewUnitPage() {
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
-            Thumbnail URL
-          </label>
-          <input
-            value={thumbnail}
-            onChange={(e) => setThumbnail(e.target.value)}
-            className="w-full border border-slate-300 rounded-xl px-3 py-2 text-slate-900"
-            placeholder="https://…"
-          />
-        </div>
+        <AdminImageField
+          label="Thumbnail"
+          value={thumbnail}
+          onChange={setThumbnail}
+          description="Optional cover image for this unit in the app."
+        />
 
         <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
           <div>

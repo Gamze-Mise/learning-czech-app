@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import Card from "@/components/Card";
-import { IconLessons, IconUnits } from "@/components/admin/AdminNavIcons";
+import { IconCourses, IconLessons, IconUnits } from "@/components/admin/AdminNavIcons";
 
 export default function AdminHomePage() {
   const statsPromise = Promise.all([
@@ -13,6 +13,12 @@ export default function AdminHomePage() {
   ]);
 
   const quickLinks = [
+    {
+      href: "/admin/courses",
+      title: "Courses",
+      desc: "Top-level courses and metadata.",
+      Icon: IconCourses,
+    },
     {
       href: "/admin/units",
       title: "Units",
@@ -42,7 +48,7 @@ export default function AdminHomePage() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {quickLinks.map(({ href, title, desc, Icon }) => (
           <Card
             key={href}
