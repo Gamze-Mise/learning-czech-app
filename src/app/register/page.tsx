@@ -6,6 +6,7 @@ import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import Card from "@/components/Card";
 import Button from "@/components/Button";
+import PasswordInput from "@/components/PasswordInput";
 
 function RegisterForm() {
   const searchParams = useSearchParams();
@@ -141,8 +142,7 @@ function RegisterForm() {
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Password (min. 8 characters)
           </label>
-          <input
-            type="password"
+          <PasswordInput
             required
             minLength={8}
             value={password}
@@ -155,8 +155,7 @@ function RegisterForm() {
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Confirm password
           </label>
-          <input
-            type="password"
+          <PasswordInput
             required
             minLength={8}
             value={passwordConfirm}

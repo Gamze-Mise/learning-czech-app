@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import Card from "@/components/Card";
 import Button from "@/components/Button";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -117,8 +118,7 @@ export default function ResetPasswordPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               New password (min. 8 characters)
             </label>
-            <input
-              type="password"
+            <PasswordInput
               required
               minLength={8}
               value={password}
@@ -131,8 +131,7 @@ export default function ResetPasswordPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Confirm password
             </label>
-            <input
-              type="password"
+            <PasswordInput
               required
               minLength={8}
               value={confirm}

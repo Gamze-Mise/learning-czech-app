@@ -6,6 +6,7 @@ import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import Card from "@/components/Card";
 import Button from "@/components/Button";
+import PasswordInput from "@/components/PasswordInput";
 
 function safeRedirect(raw: string | null, fallback: string): string {
   if (!raw || !raw.startsWith("/")) return fallback;
@@ -131,8 +132,7 @@ export default function AdminLoginPage() {
                   Forgot password?
                 </Link>
               </div>
-              <input
-                type="password"
+              <PasswordInput
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
