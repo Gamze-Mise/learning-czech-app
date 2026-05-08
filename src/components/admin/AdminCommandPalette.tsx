@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 
 type Entry = { href: string; title: string; hint: string; keywords?: string };
@@ -24,6 +24,11 @@ export default function AdminCommandPalette({ open, onClose }: Props) {
   const [q, setQ] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const handleClose = useCallback(() => {
+    setQ("");
+    onClose();
+  }, [onClose]);
+
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return ENTRIES;
@@ -34,10 +39,7 @@ export default function AdminCommandPalette({ open, onClose }: Props) {
   }, [q]);
 
   useEffect(() => {
-    if (!open) {
-      setQ("");
-      return;
-    }
+    if (!open) return;
     const t = window.setTimeout(() => inputRef.current?.focus(), 10);
     return () => window.clearTimeout(t);
   }, [open]);
@@ -45,11 +47,11 @@ export default function AdminCommandPalette({ open, onClose }: Props) {
   useEffect(() => {
     if (!open) return;
     function onEsc(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") handleClose();
     }
     window.addEventListener("keydown", onEsc);
     return () => window.removeEventListener("keydown", onEsc);
-  }, [open, onClose]);
+  }, [open, handleClose]);
 
   if (!open) return null;
 
@@ -60,7 +62,7 @@ export default function AdminCommandPalette({ open, onClose }: Props) {
       aria-modal="true"
       aria-label="Quick navigation"
       onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) handleClose();
       }}
     >
       <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-black/5">
@@ -81,7 +83,7 @@ export default function AdminCommandPalette({ open, onClose }: Props) {
               <li key={e.href}>
                 <Link
                   href={e.href}
-                  onClick={() => onClose()}
+                  onClick={() => handleClose()}
                   className="flex flex-col gap-0.5 px-4 py-2.5 text-left transition hover:bg-indigo-50"
                 >
                   <span className="text-sm font-semibold text-slate-900">{e.title}</span>

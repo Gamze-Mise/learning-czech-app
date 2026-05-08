@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import Card from "@/components/Card";
 import { IconCourses, IconLessons, IconUnits } from "@/components/admin/AdminNavIcons";
 
+export const dynamic = "force-dynamic";
+
 export default function AdminHomePage() {
   const statsPromise = Promise.all([
     prisma.courses.count(),
