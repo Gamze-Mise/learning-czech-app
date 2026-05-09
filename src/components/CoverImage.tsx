@@ -35,12 +35,16 @@ export default function CoverImage({
   }, [src]);
 
   const [currentSrc, setCurrentSrc] = useState<string>(desiredSrc);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     setCurrentSrc(desiredSrc);
+    setLoaded(false);
   }, [desiredSrc]);
 
   const hasSrc = currentSrc.length > 0;
+  const isPlaceholder = currentSrc === "/placeholder-cover.svg";
+  const showLoadingOverlay = !isPlaceholder && !loaded;
   const objectClass = fit === "cover" ? "object-cover" : "object-contain";
 
   const initials = (title ?? alt)
@@ -70,14 +74,22 @@ export default function CoverImage({
               loading="lazy"
             />
           ) : null}
+          {showLoadingOverlay ? (
+            <div
+              aria-hidden
+              className="absolute inset-0 z-10 bg-gradient-to-r from-transparent via-white/60 to-transparent animate-pulse"
+            />
+          ) : null}
           <img
             src={currentSrc}
             alt={alt}
             loading="lazy"
+            onLoad={() => setLoaded(true)}
             onError={() => {
               setCurrentSrc((prev) =>
                 prev === "/placeholder-cover.svg" ? prev : "/placeholder-cover.svg"
               );
+              setLoaded(true);
             }}
             className={["relative z-10 h-full w-full", objectClass, imgClassName].join(" ")}
           />
