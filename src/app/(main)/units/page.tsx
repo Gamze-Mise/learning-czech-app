@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import PageHeader from "@/components/PageHeader";
 import Card from "@/components/Card";
 import Button from "@/components/Button";
+import CoverImage from "@/components/CoverImage";
 
 export const dynamic = "force-dynamic";
 
@@ -65,22 +66,33 @@ export default async function UnitsPage() {
                 />
               )}
               <div className="h-full flex flex-col">
+                <div className="relative mb-5">
+                  <CoverImage
+                    src={unit.thumbnail}
+                    alt={`${unit.title} cover`}
+                    title={unit.title}
+                    aspectClassName="aspect-square"
+                    fit="contain"
+                  />
+                </div>
                 <div className="text-center pb-5 border-b border-slate-100">
-                  <div
-                    className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-inner ${
-                      isActive
-                        ? "bg-gradient-to-br from-blue-50 to-indigo-100"
-                        : "bg-slate-100"
-                    }`}
-                  >
-                    <span
-                      className={`text-2xl font-bold ${
-                        isActive ? "text-indigo-600" : "text-slate-400"
+                  {!unit.thumbnail ? (
+                    <div
+                      className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-inner ${
+                        isActive
+                          ? "bg-gradient-to-br from-blue-50 to-indigo-100"
+                          : "bg-slate-100"
                       }`}
                     >
-                      {unit.order}
-                    </span>
-                  </div>
+                      <span
+                        className={`text-2xl font-bold ${
+                          isActive ? "text-indigo-600" : "text-slate-400"
+                        }`}
+                      >
+                        {unit.order}
+                      </span>
+                    </div>
+                  ) : null}
                   <h3
                     className={`text-xl font-bold mb-2 ${
                       isActive ? "text-slate-900" : "text-slate-500"

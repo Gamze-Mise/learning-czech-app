@@ -162,6 +162,7 @@ export default function NewUnitPage() {
           value={thumbnail}
           onChange={setThumbnail}
           description="Optional cover image for this unit in the app."
+          enableFileUpload
         />
 
         <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">

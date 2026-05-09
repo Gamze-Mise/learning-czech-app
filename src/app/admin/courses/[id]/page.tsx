@@ -221,6 +221,7 @@ export default function EditCoursePage({
           value={course.thumbnail ?? ""}
           onChange={(v) => setCourse({ ...course, thumbnail: v.trim() || null })}
           description="Upload or paste an image URL for the course card."
+          enableFileUpload
         />
         <label className="flex items-center gap-2 text-slate-700">
           <input

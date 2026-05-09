@@ -135,6 +135,7 @@ export default function LessonExercisesPanel({
                       label="Image"
                       value={exDraft.imageUrl ?? ""}
                       onChange={(v) => setExDraft({ ...exDraft, imageUrl: v })}
+                      enableFileUpload
                     />
                   </div>
                 </div>
@@ -291,7 +292,13 @@ export default function LessonExercisesPanel({
           />
         </div>
         <div className="md:col-span-2">
-          <AdminImageField compact label="Image" value={newEx.imageUrl} onChange={(v) => setNewEx({ ...newEx, imageUrl: v })} />
+          <AdminImageField
+            compact
+            label="Image"
+            value={newEx.imageUrl}
+            onChange={(v) => setNewEx({ ...newEx, imageUrl: v })}
+            enableFileUpload
+          />
         </div>
         <div className="md:col-span-2">
           <label className="mb-1 block text-xs font-semibold text-slate-700">Audio URL</label>

@@ -276,6 +276,7 @@ export default function EditUnitPage({
           value={unit.thumbnail ?? ""}
           onChange={(v) => setUnit({ ...unit, thumbnail: v.trim() || null })}
           description="Upload a file (stored under /public/uploads) or paste an image URL."
+          enableFileUpload
         />
 
         <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">

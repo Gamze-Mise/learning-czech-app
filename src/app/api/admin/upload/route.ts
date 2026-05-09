@@ -1,9 +1,8 @@
 import { NextRequest } from "next/server";
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
 import { randomBytes } from "crypto";
 import { requireAdminSession } from "@/lib/auth/require-admin";
 import { jsonError, jsonOk, logApiError } from "@/lib/api-response";
+import { getCloudinary } from "@/lib/cloudinary";
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
@@ -36,12 +35,39 @@ export async function POST(request: NextRequest) {
 
     const buffer = Buffer.from(await entry.arrayBuffer());
     const ext = extByMime[mime] ?? "bin";
-    const name = `${Date.now()}-${randomBytes(8).toString("hex")}.${ext}`;
-    const dir = path.join(process.cwd(), "public", "uploads", "admin");
-    await mkdir(dir, { recursive: true });
-    await writeFile(path.join(dir, name), buffer);
+    const publicId = `${Date.now()}-${randomBytes(8).toString("hex")}`;
 
-    const url = `/uploads/admin/${name}`;
+    let result: { secure_url?: string };
+    try {
+      const cloudinary = getCloudinary();
+      result = await new Promise<{ secure_url?: string }>((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            resource_type: "image",
+            folder: "learning-czech/admin",
+            public_id: publicId,
+            overwrite: false,
+            format: ext,
+          },
+          (err, res) => {
+            if (err) return reject(err);
+            resolve(res ?? {});
+          }
+        );
+        stream.end(buffer);
+      });
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "";
+      if (message.includes("Cloudinary is not configured")) {
+        return jsonError("Cloudinary is not configured on this server.", 503);
+      }
+      throw e;
+    }
+
+    const url = typeof result.secure_url === "string" ? result.secure_url : "";
+    if (!url) {
+      return jsonError("Upload failed (no URL returned).", 502);
+    }
     return jsonOk({ url });
   } catch (error) {
     logApiError("admin/upload POST", error);
@@ -49,15 +75,6 @@ export async function POST(request: NextRequest) {
       error && typeof error === "object" && "code" in error
         ? String((error as NodeJS.ErrnoException).code)
         : "";
-    if (code === "EACCES" || code === "EROFS" || code === "EPERM") {
-      return jsonError(
-        "This server cannot write to the upload folder. Use an image URL instead.",
-        503
-      );
-    }
-    if (code === "ENOSPC") {
-      return jsonError("Disk full — use an image URL instead.", 507);
-    }
     return jsonError(
       "Upload could not be saved. Use an image URL for now.",
       500

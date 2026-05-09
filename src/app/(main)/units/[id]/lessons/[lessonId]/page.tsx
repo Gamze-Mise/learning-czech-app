@@ -7,6 +7,7 @@ import Card from "@/components/Card";
 import ProgressBar from "@/components/ProgressBar";
 import Button from "@/components/Button";
 import { devError } from "@/lib/logger";
+import CoverImage from "@/components/CoverImage";
 
 export default function LessonPage() {
   const params = useParams();
@@ -89,6 +90,15 @@ export default function LessonPage() {
       />
 
       <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="mb-5">
+          <CoverImage
+            src={lesson.thumbnail}
+            alt={`${lesson.title} cover`}
+            title={lesson.title}
+            aspectClassName="aspect-square"
+            fit="contain"
+          />
+        </div>
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-lg font-semibold text-gray-800">

@@ -96,6 +96,7 @@ export default function LessonFlashcardsPanel({
                   value={cardDraft.imageUrl ?? ""}
                   onChange={(v) => setCardDraft({ ...cardDraft, imageUrl: v })}
                   description="URL or upload; shown on the learner card when set."
+                  enableFileUpload
                 />
                 <input
                   value={cardDraft.audioUrl}
@@ -221,6 +222,7 @@ export default function LessonFlashcardsPanel({
             label="Image"
             value={newCard.imageUrl}
             onChange={(v) => setNewCard({ ...newCard, imageUrl: v })}
+            enableFileUpload
           />
         </div>
         <div className="md:col-span-2">

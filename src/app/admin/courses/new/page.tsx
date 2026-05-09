@@ -115,6 +115,7 @@ export default function NewCoursePage() {
           value={thumbnail}
           onChange={setThumbnail}
           description="Optional course cover — upload or paste a URL."
+          enableFileUpload
         />
         <label className="flex items-center gap-2 text-slate-700">
           <input

@@ -580,6 +580,7 @@ export default function NewLessonPage() {
               setFormError(null);
             }}
             description="Optional thumbnail for lesson lists."
+            enableFileUpload
           />
           {fieldErrors.thumbnail ? (
             <p className="mt-1 text-xs font-medium text-red-600">

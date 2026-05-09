@@ -7,12 +7,14 @@ import PageHeader from "@/components/PageHeader";
 import Card from "@/components/Card";
 import ProgressBar from "@/components/ProgressBar";
 import Button from "@/components/Button";
+import CoverImage from "@/components/CoverImage";
 
 interface Lesson {
   id: number;
   title: string;
   description: string;
   type: string;
+  thumbnail?: string | null;
   estimatedTime: number;
   progress: number;
   isCompleted: boolean;
@@ -28,6 +30,7 @@ interface Unit {
   title: string;
   description: string;
   level: number;
+  thumbnail?: string | null;
   progress: number;
   completedLessons: number;
   totalLessons: number;
@@ -145,6 +148,16 @@ export default function UnitPage() {
           </div>
         </div>
 
+        <div className="mb-5">
+          <CoverImage
+            src={unit.thumbnail}
+            alt={`${unit.title} cover`}
+            title={unit.title}
+            aspectClassName="aspect-square"
+            fit="contain"
+          />
+        </div>
+
         <div className="mb-4">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm font-medium text-gray-700">
@@ -193,6 +206,16 @@ export default function UnitPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
         {unit.lessons.map((lesson) => (
           <Card key={lesson.id} href={`/units/${unitId}/lessons/${lesson.id}`}>
+            <div className="-mt-4 -mx-4 sm:-mt-6 sm:-mx-6 mb-4">
+              <CoverImage
+                src={lesson.thumbnail}
+                alt={`${lesson.title} cover`}
+                title={lesson.title}
+                aspectClassName="aspect-[16/9]"
+                fit="contain"
+                className="rounded-t-xl rounded-b-none border-b-0"
+              />
+            </div>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
                 <div

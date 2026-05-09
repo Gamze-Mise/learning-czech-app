@@ -58,14 +58,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Non-admin app routes must be accessed with a USER session (not SUPER_ADMIN).
-  if (session?.role === "SUPER_ADMIN") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/admin";
-    url.search = "";
-    return NextResponse.redirect(url);
-  }
-
   if (!session) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
