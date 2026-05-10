@@ -154,13 +154,6 @@ export default function FlashcardsPage() {
     }
   };
 
-  const playAudio = () => {
-    if (flashcards[currentIndex]?.audioUrl) {
-      const audio = new Audio(flashcards[currentIndex].audioUrl!);
-      audio.play().catch(() => devError("Audio play failed"));
-    }
-  };
-
   if (loading) {
     return (
       <div className="space-y-6">
@@ -268,12 +261,19 @@ export default function FlashcardsPage() {
                   </h2>
 
                   {currentCard.audioUrl && (
-                    <button
-                      onClick={playAudio}
-                      className="p-3 bg-blue-100 rounded-full hover:bg-blue-200 transition-colors"
+                    <div
+                      className="mt-2 w-full max-w-xs"
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => e.stopPropagation()}
+                      role="presentation"
                     >
-                      🔊 Play Audio
-                    </button>
+                      <audio
+                        controls
+                        src={currentCard.audioUrl}
+                        className="w-full"
+                        preload="metadata"
+                      />
+                    </div>
                   )}
 
                   <p className="mt-6 text-sm text-gray-500">

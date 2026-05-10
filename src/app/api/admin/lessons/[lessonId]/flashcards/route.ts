@@ -35,7 +35,7 @@ export async function POST(request: NextRequest, ctx: Ctx) {
 
   try {
     const body = await request.json();
-    const order = Number(body.order ?? 1);
+    let order = body.order != null ? Number(body.order) : NaN;
     const frontText = String(body.frontText ?? "").trim();
     const backText = String(body.backText ?? "").trim();
     const audioUrl =
@@ -61,6 +61,14 @@ export async function POST(request: NextRequest, ctx: Ctx) {
 
     const lesson = await prisma.lesson.findUnique({ where: { id } });
     if (!lesson) return jsonError("Lesson not found", 404);
+
+    if (!Number.isFinite(order)) {
+      const agg = await prisma.flashcard.aggregate({
+        where: { lessonId: id },
+        _max: { order: true },
+      });
+      order = (agg._max.order ?? 0) + 1;
+    }
 
     const flashcard = await prisma.flashcard.create({
       data: {

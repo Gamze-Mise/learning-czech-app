@@ -61,7 +61,6 @@ export default function EditLessonPage({
   }, [saveSuccessOpen]);
 
   const [newPart, setNewPart] = useState({
-    order: "1",
     type: "TEXT",
     title: "",
     duration: "",
@@ -70,7 +69,6 @@ export default function EditLessonPage({
     content: "",
   });
   const [newCard, setNewCard] = useState({
-    order: "1",
     frontText: "",
     backText: "",
     imageUrl: "",
@@ -80,7 +78,6 @@ export default function EditLessonPage({
     category: "",
   });
   const [newEx, setNewEx] = useState({
-    order: "1",
     type: "MCQ",
     question: "",
     options: "",
@@ -116,17 +113,112 @@ export default function EditLessonPage({
     if (res.ok) setLesson(data.lesson);
   }
 
+  function isPronunciationGuidePart(part: any): boolean {
+    const title = String(part?.title ?? "").trim().toLowerCase();
+    return title === "pronunciation guide";
+  }
+
+  async function reorderParts(partId: number, targetIndex: number) {
+    if (!lesson) return;
+    const all = Array.isArray(lesson.parts) ? [...lesson.parts] : [];
+    const hidden = all.filter(isPronunciationGuidePart);
+    const visible = all.filter((p) => !isPronunciationGuidePart(p));
+    const fromIndex = visible.findIndex((p) => p.id === partId);
+    if (fromIndex < 0) return;
+
+    const next = [...visible];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(Math.max(0, Math.min(targetIndex, next.length)), 0, moved);
+
+    const reordered = [...next, ...hidden];
+
+    setBusy("part");
+    setSaveError(null);
+    try {
+      for (let i = 0; i < reordered.length; i++) {
+        const pid = reordered[i].id as number;
+        await fetch(`/api/admin/lessons/${lesson.id}/parts/${pid}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ order: i + 1 }),
+        });
+      }
+      await refreshLesson();
+    } catch {
+      setSaveError("Reorder failed (network error).");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function reorderFlashcards(flashcardId: number, targetIndex: number) {
+    if (!lesson) return;
+    const all = Array.isArray(lesson.flashcards) ? [...lesson.flashcards] : [];
+    const fromIndex = all.findIndex((c: any) => c.id === flashcardId);
+    if (fromIndex < 0) return;
+    const next = [...all];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(Math.max(0, Math.min(targetIndex, next.length)), 0, moved);
+
+    setBusy("card");
+    setSaveError(null);
+    try {
+      for (let i = 0; i < next.length; i++) {
+        const id = next[i].id as number;
+        await fetch(`/api/admin/lessons/${lesson.id}/flashcards/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ order: i + 1 }),
+        });
+      }
+      await refreshLesson();
+    } catch {
+      setSaveError("Reorder failed (network error).");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function reorderExercises(exerciseId: number, targetIndex: number) {
+    if (!lesson) return;
+    const all = Array.isArray(lesson.exercises) ? [...lesson.exercises] : [];
+    const fromIndex = all.findIndex((ex: any) => ex.id === exerciseId);
+    if (fromIndex < 0) return;
+    const next = [...all];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(Math.max(0, Math.min(targetIndex, next.length)), 0, moved);
+
+    setBusy("ex");
+    setSaveError(null);
+    try {
+      for (let i = 0; i < next.length; i++) {
+        const id = next[i].id as number;
+        await fetch(`/api/admin/lessons/${lesson.id}/exercises/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ order: i + 1 }),
+        });
+      }
+      await refreshLesson();
+    } catch {
+      setSaveError("Reorder failed (network error).");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function addPart(e: React.FormEvent) {
     e.preventDefault();
     if (!lesson) return;
     setBusy("part");
     setSaveError(null);
     try {
+      const nextOrder = Array.isArray(lesson.parts) ? lesson.parts.length + 1 : 1;
       const res = await fetch(`/api/admin/lessons/${lesson.id}/parts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          order: Number(newPart.order) || 1,
+          order: nextOrder,
           type: newPart.type,
           title: newPart.title || null,
           duration: newPart.duration ? Number(newPart.duration) : null,
@@ -142,7 +234,6 @@ export default function EditLessonPage({
         return;
       }
       setNewPart({
-        order: String((Number(newPart.order) || 1) + 1),
         type: "TEXT",
         title: "",
         duration: "",
@@ -223,11 +314,12 @@ export default function EditLessonPage({
     setBusy("card");
     setSaveError(null);
     try {
+      const nextOrder = Array.isArray(lesson.flashcards) ? lesson.flashcards.length + 1 : 1;
       const res = await fetch(`/api/admin/lessons/${lesson.id}/flashcards`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          order: Number(newCard.order) || 1,
+          order: nextOrder,
           frontText: newCard.frontText,
           backText: newCard.backText,
           imageUrl: newCard.imageUrl || null,
@@ -244,7 +336,6 @@ export default function EditLessonPage({
         return;
       }
       setNewCard({
-        order: String((Number(newCard.order) || 1) + 1),
         frontText: "",
         backText: "",
         imageUrl: "",
@@ -331,11 +422,12 @@ export default function EditLessonPage({
     setBusy("ex");
     setSaveError(null);
     try {
+      const nextOrder = Array.isArray(lesson.exercises) ? lesson.exercises.length + 1 : 1;
       const res = await fetch(`/api/admin/lessons/${lesson.id}/exercises`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          order: Number(newEx.order) || 1,
+          order: nextOrder,
           type: newEx.type,
           question: newEx.question,
           options: newEx.options || null,
@@ -355,7 +447,6 @@ export default function EditLessonPage({
         return;
       }
       setNewEx({
-        order: String((Number(newEx.order) || 1) + 1),
         type: "MCQ",
         question: "",
         options: "",
@@ -573,21 +664,7 @@ export default function EditLessonPage({
             className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
           />
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Order
-            </label>
-            <input
-              type="number"
-              min={1}
-              value={lesson.order}
-              onChange={(e) =>
-                setLesson({ ...lesson, order: Number(e.target.value) })
-              }
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900"
-            />
-          </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
               Difficulty
@@ -707,6 +784,7 @@ export default function EditLessonPage({
         onDeactivatePart={deactivatePart}
         onStartEditPart={startEditPart}
         onSavePart={savePart}
+        onReorderPart={reorderParts}
         onCancelEditPart={() => {
           setEditingPartId(null);
           setPartDraft(null);
@@ -725,6 +803,7 @@ export default function EditLessonPage({
         onDeactivateFlashcard={deactivateFlashcard}
         onStartEditCard={startEditCard}
         onSaveCard={saveCard}
+        onReorderFlashcard={reorderFlashcards}
         onCancelEditCard={() => {
           setEditingCardId(null);
           setCardDraft(null);
@@ -743,6 +822,7 @@ export default function EditLessonPage({
         onDeactivateExercise={deactivateExercise}
         onStartEditExercise={startEditExercise}
         onSaveExercise={saveExercise}
+        onReorderExercise={reorderExercises}
         onCancelEditExercise={() => {
           setEditingExId(null);
           setExDraft(null);

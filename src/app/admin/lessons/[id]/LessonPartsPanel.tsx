@@ -1,7 +1,9 @@
 "use client";
 
+import AdminAudioField from "@/components/admin/AdminAudioField";
+import { useState } from "react";
+
 export type NewPartState = {
-  order: string;
   type: string;
   title: string;
   duration: string;
@@ -23,6 +25,7 @@ type Props = {
   onStartEditPart: (part: any) => void;
   onSavePart: (partId: number) => void;
   onCancelEditPart: () => void;
+  onReorderPart: (partId: number, targetIndex: number) => void;
 };
 
 const PART_TYPES = [
@@ -48,7 +51,17 @@ export default function LessonPartsPanel({
   onStartEditPart,
   onSavePart,
   onCancelEditPart,
+  onReorderPart,
 }: Props) {
+  const [draggingId, setDraggingId] = useState<number | null>(null);
+
+  const visibleParts = parts.filter((p: any) => {
+    const title = String(p?.title ?? "")
+      .trim()
+      .toLowerCase();
+    return title !== "pronunciation guide";
+  });
+
   return (
     <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="flex items-center justify-between">
@@ -56,23 +69,34 @@ export default function LessonPartsPanel({
           <h2 className="text-lg font-bold text-slate-900">Lesson parts</h2>
           <p className="text-sm text-slate-600">Introduction, audio, video, etc.</p>
         </div>
-        <span className="text-sm text-slate-500">{parts.length} total</span>
+        <span className="text-sm text-slate-500">{visibleParts.length} total</span>
       </div>
 
       <div className="space-y-2">
-        {parts.map((p: any) => (
+        {visibleParts.map((p: any, index: number) => (
           <div
             key={p.id}
+            draggable={editingPartId == null}
+            onDragStart={() => setDraggingId(p.id)}
+            onDragEnd={() => setDraggingId(null)}
+            onDragOver={(e) => {
+              if (draggingId == null || draggingId === p.id) return;
+              e.preventDefault();
+            }}
+            onDrop={(e) => {
+              if (draggingId == null || draggingId === p.id) return;
+              e.preventDefault();
+              onReorderPart(draggingId, index);
+              setDraggingId(null);
+            }}
             className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-3"
           >
             {editingPartId === p.id && partDraft ? (
               <div className="w-full space-y-2">
                 <div className="grid grid-cols-3 gap-2">
-                  <input
-                    value={partDraft.order}
-                    onChange={(e) => setPartDraft({ ...partDraft, order: e.target.value })}
-                    className="rounded-lg border border-slate-300 px-2 py-1 text-sm text-slate-900"
-                  />
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-sm text-slate-600">
+                    #{index + 1}
+                  </div>
                   <select
                     value={partDraft.type}
                     onChange={(e) => setPartDraft({ ...partDraft, type: e.target.value })}
@@ -97,25 +121,34 @@ export default function LessonPartsPanel({
                   placeholder="Title"
                   className="w-full rounded-lg border border-slate-300 px-2 py-1 text-sm text-slate-900"
                 />
-                <input
-                  value={partDraft.audioUrl}
-                  onChange={(e) => setPartDraft({ ...partDraft, audioUrl: e.target.value })}
-                  placeholder="Audio URL"
-                  className="w-full rounded-lg border border-slate-300 px-2 py-1 text-sm text-slate-900"
-                />
-                <input
-                  value={partDraft.videoUrl}
-                  onChange={(e) => setPartDraft({ ...partDraft, videoUrl: e.target.value })}
-                  placeholder="Video URL"
-                  className="w-full rounded-lg border border-slate-300 px-2 py-1 text-sm text-slate-900"
-                />
-                <textarea
-                  value={partDraft.content}
-                  onChange={(e) => setPartDraft({ ...partDraft, content: e.target.value })}
-                  rows={2}
-                  placeholder="Content markdown"
-                  className="w-full rounded-lg border border-slate-300 px-2 py-1 text-sm text-slate-900"
-                />
+                {partDraft.type === "AUDIO" ? (
+                  <AdminAudioField
+                    compact
+                    label="Audio"
+                    value={partDraft.audioUrl ?? ""}
+                    onChange={(v) => setPartDraft({ ...partDraft, audioUrl: v })}
+                    enableFileUpload
+                  />
+                ) : null}
+
+                {partDraft.type === "VIDEO" ? (
+                  <input
+                    value={partDraft.videoUrl}
+                    onChange={(e) => setPartDraft({ ...partDraft, videoUrl: e.target.value })}
+                    placeholder="Video URL"
+                    className="w-full rounded-lg border border-slate-300 px-2 py-1 text-sm text-slate-900"
+                  />
+                ) : null}
+
+                {partDraft.type === "TEXT" ? (
+                  <textarea
+                    value={partDraft.content}
+                    onChange={(e) => setPartDraft({ ...partDraft, content: e.target.value })}
+                    rows={2}
+                    placeholder="Content markdown"
+                    className="w-full rounded-lg border border-slate-300 px-2 py-1 text-sm text-slate-900"
+                  />
+                ) : null}
                 <label className="flex items-center gap-2 text-xs text-slate-700">
                   <input
                     type="checkbox"
@@ -146,7 +179,10 @@ export default function LessonPartsPanel({
               <>
                 <div className="min-w-0">
                   <div className="truncate text-sm font-semibold text-slate-900">
-                    {p.order}. {p.title ?? "(untitled)"}
+                    <span className="mr-2 inline-flex select-none items-center text-slate-400" aria-hidden>
+                      ⋮⋮
+                    </span>
+                    {index + 1}. {p.title ?? "(untitled)"}
                   </div>
                   <div className="text-xs text-slate-600">
                     {p.type} {p.duration ? `• ${p.duration}s` : ""}{" "}
@@ -175,19 +211,11 @@ export default function LessonPartsPanel({
             )}
           </div>
         ))}
-        {parts.length === 0 && <p className="text-sm text-slate-500">No parts yet.</p>}
+        {visibleParts.length === 0 && <p className="text-sm text-slate-500">No parts yet.</p>}
       </div>
 
       <form onSubmit={onAddPart} className="grid grid-cols-1 gap-3 pt-2 md:grid-cols-2">
         <div className="grid grid-cols-2 gap-3 md:col-span-2">
-          <div>
-            <label className="mb-1 block text-xs font-semibold text-slate-700">Order</label>
-            <input
-              value={newPart.order}
-              onChange={(e) => setNewPart({ ...newPart, order: e.target.value })}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900"
-            />
-          </div>
           <div>
             <label className="mb-1 block text-xs font-semibold text-slate-700">Type</label>
             <select
@@ -221,36 +249,44 @@ export default function LessonPartsPanel({
             placeholder="e.g. 90"
           />
         </div>
-        <div>
-          <label className="mb-1 block text-xs font-semibold text-slate-700">Audio URL</label>
-          <input
-            value={newPart.audioUrl}
-            onChange={(e) => setNewPart({ ...newPart, audioUrl: e.target.value })}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900"
-            placeholder="https://…"
-          />
-        </div>
-        <div className="md:col-span-2">
-          <label className="mb-1 block text-xs font-semibold text-slate-700">Video URL</label>
-          <input
-            value={newPart.videoUrl}
-            onChange={(e) => setNewPart({ ...newPart, videoUrl: e.target.value })}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900"
-            placeholder="https://…"
-          />
-        </div>
-        <div className="md:col-span-2">
-          <label className="mb-1 block text-xs font-semibold text-slate-700">
-            Text content (markdown)
-          </label>
-          <textarea
-            value={newPart.content}
-            onChange={(e) => setNewPart({ ...newPart, content: e.target.value })}
-            rows={4}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900"
-            placeholder="Write intro text…"
-          />
-        </div>
+
+        {newPart.type === "AUDIO" ? (
+          <div className="md:col-span-2">
+            <AdminAudioField
+              label="Audio"
+              value={newPart.audioUrl}
+              onChange={(v) => setNewPart({ ...newPart, audioUrl: v })}
+              enableFileUpload
+            />
+          </div>
+        ) : null}
+
+        {newPart.type === "VIDEO" ? (
+          <div className="md:col-span-2">
+            <label className="mb-1 block text-xs font-semibold text-slate-700">Video URL</label>
+            <input
+              value={newPart.videoUrl}
+              onChange={(e) => setNewPart({ ...newPart, videoUrl: e.target.value })}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900"
+              placeholder="https://…"
+            />
+          </div>
+        ) : null}
+
+        {newPart.type === "TEXT" ? (
+          <div className="md:col-span-2">
+            <label className="mb-1 block text-xs font-semibold text-slate-700">
+              Text content (markdown)
+            </label>
+            <textarea
+              value={newPart.content}
+              onChange={(e) => setNewPart({ ...newPart, content: e.target.value })}
+              rows={4}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900"
+              placeholder="Write intro text…"
+            />
+          </div>
+        ) : null}
         <div className="md:col-span-2">
           <button
             type="submit"

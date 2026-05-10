@@ -1,9 +1,10 @@
 "use client";
 
 import AdminImageField from "@/components/admin/AdminImageField";
+import AdminAudioField from "@/components/admin/AdminAudioField";
+import { useState } from "react";
 
 export type NewCardState = {
-  order: string;
   frontText: string;
   backText: string;
   imageUrl: string;
@@ -26,6 +27,7 @@ type Props = {
   onStartEditCard: (card: any) => void;
   onSaveCard: (id: number) => void;
   onCancelEditCard: () => void;
+  onReorderFlashcard: (flashcardId: number, targetIndex: number) => void;
 };
 
 export default function LessonFlashcardsPanel({
@@ -41,7 +43,10 @@ export default function LessonFlashcardsPanel({
   onStartEditCard,
   onSaveCard,
   onCancelEditCard,
+  onReorderFlashcard,
 }: Props) {
+  const [draggingId, setDraggingId] = useState<number | null>(null);
+
   return (
     <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="flex items-center justify-between">
@@ -53,19 +58,30 @@ export default function LessonFlashcardsPanel({
       </div>
 
       <div className="space-y-2">
-        {flashcards.map((c: any) => (
+        {flashcards.map((c: any, index: number) => (
           <div
             key={c.id}
+            draggable={editingCardId == null}
+            onDragStart={() => setDraggingId(c.id)}
+            onDragEnd={() => setDraggingId(null)}
+            onDragOver={(e) => {
+              if (draggingId == null || draggingId === c.id) return;
+              e.preventDefault();
+            }}
+            onDrop={(e) => {
+              if (draggingId == null || draggingId === c.id) return;
+              e.preventDefault();
+              onReorderFlashcard(draggingId, index);
+              setDraggingId(null);
+            }}
             className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-3"
           >
             {editingCardId === c.id && cardDraft ? (
               <div className="w-full space-y-2">
                 <div className="grid grid-cols-3 gap-2">
-                  <input
-                    value={cardDraft.order}
-                    onChange={(e) => setCardDraft({ ...cardDraft, order: e.target.value })}
-                    className="rounded-lg border border-slate-300 px-2 py-1 text-sm text-slate-900"
-                  />
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-sm text-slate-600">
+                    #{index + 1}
+                  </div>
                   <input
                     value={cardDraft.difficulty}
                     onChange={(e) => setCardDraft({ ...cardDraft, difficulty: e.target.value })}
@@ -98,11 +114,12 @@ export default function LessonFlashcardsPanel({
                   description="URL or upload; shown on the learner card when set."
                   enableFileUpload
                 />
-                <input
-                  value={cardDraft.audioUrl}
-                  onChange={(e) => setCardDraft({ ...cardDraft, audioUrl: e.target.value })}
-                  placeholder="Audio URL"
-                  className="w-full rounded-lg border border-slate-300 px-2 py-1 text-sm text-slate-900"
+                <AdminAudioField
+                  compact
+                  label="Audio"
+                  value={cardDraft.audioUrl ?? ""}
+                  onChange={(v) => setCardDraft({ ...cardDraft, audioUrl: v })}
+                  enableFileUpload
                 />
                 <input
                   value={cardDraft.example}
@@ -140,7 +157,10 @@ export default function LessonFlashcardsPanel({
               <>
                 <div className="min-w-0">
                   <div className="truncate text-sm font-semibold text-slate-900">
-                    {c.order}. {c.frontText} → {c.backText}
+                    <span className="mr-2 inline-flex select-none items-center text-slate-400" aria-hidden>
+                      ⋮⋮
+                    </span>
+                    {index + 1}. {c.frontText} → {c.backText}
                   </div>
                   <div className="text-xs text-slate-600">
                     {c.imageUrl ? "image " : ""}
@@ -174,14 +194,6 @@ export default function LessonFlashcardsPanel({
       </div>
 
       <form onSubmit={onAddFlashcard} className="grid grid-cols-1 gap-3 pt-2 md:grid-cols-2">
-        <div>
-          <label className="mb-1 block text-xs font-semibold text-slate-700">Order</label>
-          <input
-            value={newCard.order}
-            onChange={(e) => setNewCard({ ...newCard, order: e.target.value })}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900"
-          />
-        </div>
         <div>
           <label className="mb-1 block text-xs font-semibold text-slate-700">Difficulty</label>
           <input
@@ -226,12 +238,11 @@ export default function LessonFlashcardsPanel({
           />
         </div>
         <div className="md:col-span-2">
-          <label className="mb-1 block text-xs font-semibold text-slate-700">Audio URL</label>
-          <input
+          <AdminAudioField
+            label="Audio"
             value={newCard.audioUrl}
-            onChange={(e) => setNewCard({ ...newCard, audioUrl: e.target.value })}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900"
-            placeholder="https://…"
+            onChange={(v) => setNewCard({ ...newCard, audioUrl: v })}
+            enableFileUpload
           />
         </div>
         <div className="md:col-span-2">

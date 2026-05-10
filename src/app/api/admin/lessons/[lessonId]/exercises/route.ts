@@ -36,7 +36,7 @@ export async function POST(request: NextRequest, ctx: Ctx) {
 
   try {
     const body = await request.json();
-    const order = Number(body.order ?? 1);
+    let order = body.order != null ? Number(body.order) : NaN;
     const type = (String(body.type ?? "MCQ") as ExerciseType) ?? "MCQ";
     const question = String(body.question ?? "").trim();
     const answer = body.answer != null && String(body.answer).trim() ? String(body.answer).trim() : null;
@@ -64,6 +64,14 @@ export async function POST(request: NextRequest, ctx: Ctx) {
 
     const lesson = await prisma.lesson.findUnique({ where: { id } });
     if (!lesson) return jsonError("Lesson not found", 404);
+
+    if (!Number.isFinite(order)) {
+      const agg = await prisma.exercise.aggregate({
+        where: { lessonId: id },
+        _max: { order: true },
+      });
+      order = (agg._max.order ?? 0) + 1;
+    }
 
     const exercise = await prisma.exercise.create({
       data: {

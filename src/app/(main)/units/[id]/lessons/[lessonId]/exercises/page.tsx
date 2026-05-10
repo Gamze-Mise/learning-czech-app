@@ -397,6 +397,17 @@ export default function ExercisesPage() {
               </p>
             </div>
 
+            {current.audioUrl ? (
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <audio
+                  controls
+                  src={current.audioUrl}
+                  className="w-full max-w-md"
+                  preload="metadata"
+                />
+              </div>
+            ) : null}
+
             {current.type === "MCQ" && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {(current.options ?? []).map((option: any, i: number) => {

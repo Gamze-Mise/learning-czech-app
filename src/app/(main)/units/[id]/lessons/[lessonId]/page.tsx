@@ -34,22 +34,6 @@ export default function LessonPage() {
     void fetchLesson();
   }, [fetchLesson]);
 
-  const playAudio = (audioUrl: string) => {
-    if (audioUrl) {
-      if (audioUrl.includes("/uploads/")) {
-        alert(
-          `🎵 Audio would play: ${audioUrl}\n\n(Demo mode - audio files not yet uploaded)`
-        );
-      } else {
-        const audio = new Audio(audioUrl);
-        audio.play().catch(() => {
-          devError("Audio play failed:", audioUrl);
-          alert(`🎵 Audio file not found: ${audioUrl}`);
-        });
-      }
-    }
-  };
-
   if (loading) {
     return (
       <div className="space-y-6">
@@ -179,34 +163,14 @@ export default function LessonPage() {
             )}
 
             {part.type === "AUDIO" && part.audioUrl && (
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <svg
-                      className="w-6 h-6 text-blue-600"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.793L4.617 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.617l3.766-3.793a1 1 0 011.617.793zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-bold text-gray-900">
-                      Audio Content
-                    </p>
-                    <p className="text-xs text-gray-700">Click to play</p>
-                  </div>
-                  <button
-                    onClick={() => playAudio(part.audioUrl)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Play
-                  </button>
-                </div>
+              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                <p className="text-sm font-semibold text-gray-900">Audio</p>
+                <audio
+                  controls
+                  src={part.audioUrl}
+                  className="w-full max-w-md"
+                  preload="metadata"
+                />
               </div>
             )}
 
@@ -337,6 +301,16 @@ export default function LessonPage() {
                       Level {flashcard.difficulty}
                     </span>
                   </div>
+                  {flashcard.audioUrl ? (
+                    <div className="mt-4 w-full max-w-xs mx-auto">
+                      <audio
+                        controls
+                        src={flashcard.audioUrl}
+                        className="w-full"
+                        preload="metadata"
+                      />
+                    </div>
+                  ) : null}
                 </div>
               </Card>
             ))}

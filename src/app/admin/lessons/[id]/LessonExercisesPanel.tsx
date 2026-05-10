@@ -1,9 +1,10 @@
 "use client";
 
 import AdminImageField from "@/components/admin/AdminImageField";
+import AdminAudioField from "@/components/admin/AdminAudioField";
+import { useState } from "react";
 
 export type NewExState = {
-  order: string;
   type: string;
   question: string;
   options: string;
@@ -39,6 +40,7 @@ type Props = {
   onStartEditExercise: (ex: any) => void;
   onSaveExercise: (id: number) => void;
   onCancelEditExercise: () => void;
+  onReorderExercise: (exerciseId: number, targetIndex: number) => void;
 };
 
 export default function LessonExercisesPanel({
@@ -54,7 +56,10 @@ export default function LessonExercisesPanel({
   onStartEditExercise,
   onSaveExercise,
   onCancelEditExercise,
+  onReorderExercise,
 }: Props) {
+  const [draggingId, setDraggingId] = useState<number | null>(null);
+
   return (
     <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="flex items-center justify-between">
@@ -66,19 +71,30 @@ export default function LessonExercisesPanel({
       </div>
 
       <div className="space-y-2">
-        {exercises.map((ex: any) => (
+        {exercises.map((ex: any, index: number) => (
           <div
             key={ex.id}
+            draggable={editingExId == null}
+            onDragStart={() => setDraggingId(ex.id)}
+            onDragEnd={() => setDraggingId(null)}
+            onDragOver={(e) => {
+              if (draggingId == null || draggingId === ex.id) return;
+              e.preventDefault();
+            }}
+            onDrop={(e) => {
+              if (draggingId == null || draggingId === ex.id) return;
+              e.preventDefault();
+              onReorderExercise(draggingId, index);
+              setDraggingId(null);
+            }}
             className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-3"
           >
             {editingExId === ex.id && exDraft ? (
               <div className="w-full space-y-2">
                 <div className="grid grid-cols-3 gap-2">
-                  <input
-                    value={exDraft.order}
-                    onChange={(e) => setExDraft({ ...exDraft, order: e.target.value })}
-                    className="rounded-lg border border-slate-300 px-2 py-1 text-sm text-slate-900"
-                  />
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-sm text-slate-600">
+                    #{index + 1}
+                  </div>
                   <select
                     value={exDraft.type}
                     onChange={(e) => setExDraft({ ...exDraft, type: e.target.value })}
@@ -139,11 +155,12 @@ export default function LessonExercisesPanel({
                     />
                   </div>
                 </div>
-                <input
-                  value={exDraft.audioUrl}
-                  onChange={(e) => setExDraft({ ...exDraft, audioUrl: e.target.value })}
-                  placeholder="Audio URL"
-                  className="w-full rounded-lg border border-slate-300 px-2 py-1 text-sm text-slate-900"
+                <AdminAudioField
+                  compact
+                  label="Audio"
+                  value={exDraft.audioUrl ?? ""}
+                  onChange={(v) => setExDraft({ ...exDraft, audioUrl: v })}
+                  enableFileUpload
                 />
                 <textarea
                   value={exDraft.explanation}
@@ -182,7 +199,10 @@ export default function LessonExercisesPanel({
               <>
                 <div className="min-w-0">
                   <div className="truncate text-sm font-semibold text-slate-900">
-                    {ex.order}. [{ex.type}] {ex.question}
+                    <span className="mr-2 inline-flex select-none items-center text-slate-400" aria-hidden>
+                      ⋮⋮
+                    </span>
+                    {index + 1}. [{ex.type}] {ex.question}
                   </div>
                   <div className="text-xs text-slate-600">
                     {ex.points} XP • diff {ex.difficulty}{" "}
@@ -216,14 +236,6 @@ export default function LessonExercisesPanel({
       </div>
 
       <form onSubmit={onAddExercise} className="grid grid-cols-1 gap-3 pt-2 md:grid-cols-2">
-        <div>
-          <label className="mb-1 block text-xs font-semibold text-slate-700">Order</label>
-          <input
-            value={newEx.order}
-            onChange={(e) => setNewEx({ ...newEx, order: e.target.value })}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900"
-          />
-        </div>
         <div>
           <label className="mb-1 block text-xs font-semibold text-slate-700">Type</label>
           <select
@@ -301,12 +313,11 @@ export default function LessonExercisesPanel({
           />
         </div>
         <div className="md:col-span-2">
-          <label className="mb-1 block text-xs font-semibold text-slate-700">Audio URL</label>
-          <input
+          <AdminAudioField
+            label="Audio"
             value={newEx.audioUrl}
-            onChange={(e) => setNewEx({ ...newEx, audioUrl: e.target.value })}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900"
-            placeholder="https://…"
+            onChange={(v) => setNewEx({ ...newEx, audioUrl: v })}
+            enableFileUpload
           />
         </div>
         <div className="md:col-span-2">
