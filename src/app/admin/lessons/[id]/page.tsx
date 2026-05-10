@@ -423,6 +423,8 @@ export default function EditLessonPage({
     setSaveError(null);
     try {
       const nextOrder = Array.isArray(lesson.exercises) ? lesson.exercises.length + 1 : 1;
+      const allowAudio = newEx.type === "LISTENING";
+      const allowTimeLimit = newEx.type !== "MATCHING";
       const res = await fetch(`/api/admin/lessons/${lesson.id}/exercises`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -435,8 +437,8 @@ export default function EditLessonPage({
           explanation: newEx.explanation || null,
           points: Number(newEx.points) || 1,
           difficulty: Number(newEx.difficulty) || 1,
-          timeLimit: newEx.timeLimit ? Number(newEx.timeLimit) : null,
-          audioUrl: newEx.audioUrl || null,
+          timeLimit: allowTimeLimit && newEx.timeLimit ? Number(newEx.timeLimit) : null,
+          audioUrl: allowAudio ? newEx.audioUrl || null : null,
           imageUrl: newEx.imageUrl || null,
           isActive: true,
         }),
@@ -500,6 +502,8 @@ export default function EditLessonPage({
     setBusy("ex");
     setSaveError(null);
     try {
+      const allowAudio = exDraft.type === "LISTENING";
+      const allowTimeLimit = exDraft.type !== "MATCHING";
       const res = await fetch(
         `/api/admin/lessons/${lesson.id}/exercises/${exerciseId}`,
         {
@@ -514,8 +518,8 @@ export default function EditLessonPage({
             explanation: exDraft.explanation || null,
             points: Number(exDraft.points) || 1,
             difficulty: Number(exDraft.difficulty) || 1,
-            timeLimit: exDraft.timeLimit ? Number(exDraft.timeLimit) : null,
-            audioUrl: exDraft.audioUrl || null,
+            timeLimit: allowTimeLimit && exDraft.timeLimit ? Number(exDraft.timeLimit) : null,
+            audioUrl: allowAudio ? exDraft.audioUrl || null : null,
             imageUrl: exDraft.imageUrl || null,
             isActive: exDraft.isActive,
           }),

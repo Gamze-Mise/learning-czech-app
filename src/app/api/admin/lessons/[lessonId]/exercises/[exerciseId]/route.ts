@@ -6,6 +6,45 @@ import { internalError, jsonError, jsonOk, logApiError } from "@/lib/api-respons
 
 type Ctx = { params: Promise<{ lessonId: string; exerciseId: string }> };
 
+function isMcqLike(type: ExerciseType): boolean {
+  return type === "MCQ" || type === "LISTENING";
+}
+
+function isFillLike(type: ExerciseType): boolean {
+  return type === "FILL" || type === "TRANSLATION";
+}
+
+function validateExercise(type: ExerciseType, answer: string | null, options: any): string | null {
+  if (isFillLike(type)) {
+    if (!answer || !answer.trim()) return "Answer is required for this exercise type.";
+  }
+
+  if (isMcqLike(type)) {
+    if (!Array.isArray(options) || options.length < 2) {
+      return "MCQ/LISTENING requires at least 2 options.";
+    }
+    const correctCount = options.filter((o: any) => o && o.correct === true).length;
+    if (correctCount !== 1) return "MCQ/LISTENING requires exactly 1 correct option.";
+  }
+
+  if (type === "MATCHING") {
+    if (!Array.isArray(options) || options.length < 1) {
+      return "MATCHING requires at least 1 pair.";
+    }
+    const ok = options.every(
+      (o: any) =>
+        o &&
+        typeof o.left === "string" &&
+        typeof o.right === "string" &&
+        o.left.trim().length > 0 &&
+        o.right.trim().length > 0
+    );
+    if (!ok) return "MATCHING options must be an array of { left, right } with non-empty strings.";
+  }
+
+  return null;
+}
+
 export async function PATCH(request: NextRequest, ctx: Ctx) {
   const { session, response } = await requireAdminSession();
   if (!session) return response!;
@@ -42,6 +81,18 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
         }
       }
     }
+
+    const existing = await prisma.exercise.findUnique({
+      where: { id: eId, lessonId: lId },
+      select: { type: true, options: true, answer: true },
+    });
+    if (!existing) return jsonError("Exercise not found", 404);
+
+    const finalType = (data.type as ExerciseType | undefined) ?? existing.type;
+    const finalOptions = (data.options as any) ?? existing.options;
+    const finalAnswer = (data.answer as string | null | undefined) ?? existing.answer;
+    const validationError = validateExercise(finalType, finalAnswer, finalOptions);
+    if (validationError) return jsonError(validationError, 400);
 
     const exercise = await prisma.exercise.update({
       where: { id: eId, lessonId: lId },

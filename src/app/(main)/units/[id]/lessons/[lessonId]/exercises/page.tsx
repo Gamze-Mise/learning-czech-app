@@ -151,21 +151,28 @@ export default function ExercisesPage() {
 
   function computeCorrect(): { correct: boolean; correctAnswer: string } {
     if (!current) return { correct: false, correctAnswer: "" };
-    if (current.type === "MCQ") {
+    const effectiveType =
+      current.type === "LISTENING"
+        ? "MCQ"
+        : current.type === "TRANSLATION"
+          ? "FILL"
+          : current.type;
+
+    if (effectiveType === "MCQ") {
       const correctOption = (current.options ?? []).find(
         (opt: any) => opt.correct === true
       );
       const correctAnswer = correctOption?.text || current.answer || "";
       return { correct: selectedAnswer === correctAnswer, correctAnswer };
     }
-    if (current.type === "FILL") {
+    if (effectiveType === "FILL") {
       const correctAnswer = current.answer || "";
       return {
         correct: isAnswerAcceptable(userAnswer, correctAnswer),
         correctAnswer,
       };
     }
-    if (current.type === "MATCHING") {
+    if (effectiveType === "MATCHING") {
       const correctPairs = (current.options ?? []).length;
       const userPairs = Object.keys(matchingPairs).length;
       if (userPairs !== correctPairs) {
@@ -184,10 +191,16 @@ export default function ExercisesPage() {
 
   async function saveResult(correct: boolean): Promise<void> {
     if (!current) return;
+    const effectiveType =
+      current.type === "LISTENING"
+        ? "MCQ"
+        : current.type === "TRANSLATION"
+          ? "FILL"
+          : current.type;
     const answer =
-      current.type === "FILL"
+      effectiveType === "FILL"
         ? userAnswer
-        : current.type === "MATCHING"
+        : effectiveType === "MATCHING"
           ? JSON.stringify(matchingPairs)
           : selectedAnswer;
 
@@ -397,6 +410,20 @@ export default function ExercisesPage() {
               </p>
             </div>
 
+            {current.imageUrl ? (
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                {/* eslint-disable-next-line @next/next/no-img-element -- remote lesson URLs */}
+                <img
+                  src={current.imageUrl}
+                  alt=""
+                  className="w-full max-w-md rounded-lg object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              </div>
+            ) : null}
+
             {current.audioUrl ? (
               <div className="rounded-xl border border-slate-200 bg-white p-4">
                 <audio
@@ -408,7 +435,7 @@ export default function ExercisesPage() {
               </div>
             ) : null}
 
-            {current.type === "MCQ" && (
+            {(current.type === "MCQ" || current.type === "LISTENING") && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {(current.options ?? []).map((option: any, i: number) => {
                   const optionText =
@@ -435,7 +462,7 @@ export default function ExercisesPage() {
               </div>
             )}
 
-            {current.type === "FILL" && (
+            {(current.type === "FILL" || current.type === "TRANSLATION") && (
               <div className="space-y-2">
                 <input
                   type="text"
@@ -554,8 +581,10 @@ export default function ExercisesPage() {
                 variant="primary"
                 size="lg"
                 disabled={
-                  (current.type === "MCQ" && !selectedAnswer) ||
-                  (current.type === "FILL" && !userAnswer.trim()) ||
+                  ((current.type === "MCQ" || current.type === "LISTENING") &&
+                    !selectedAnswer) ||
+                  ((current.type === "FILL" || current.type === "TRANSLATION") &&
+                    !userAnswer.trim()) ||
                   (current.type === "MATCHING" &&
                     Object.keys(matchingPairs).length !==
                       (current.options ?? []).length)
