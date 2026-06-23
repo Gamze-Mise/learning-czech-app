@@ -100,6 +100,7 @@ function CoverImageContent({
   return (
     <>
       {fit === "contain" ? (
+        // eslint-disable-next-line @next/next/no-img-element -- blur backdrop for contain-fit covers
         <img
           src={displaySrc}
           alt=""
@@ -114,6 +115,7 @@ function CoverImageContent({
           className="absolute inset-0 z-10 bg-gradient-to-r from-transparent via-white/60 to-transparent animate-pulse"
         />
       ) : null}
+      {/* eslint-disable-next-line @next/next/no-img-element -- remote Cloudinary URLs and placeholders */}
       <img
         src={displaySrc}
         alt={alt}

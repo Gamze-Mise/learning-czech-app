@@ -1,54 +1,22 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import Card from "@/components/Card";
 import Button from "@/components/Button";
-import { devError } from "@/lib/logger";
+import PageLoadingSpinner from "@/components/learner/PageLoadingSpinner";
+import ContinueLearningBanner from "@/components/home/ContinueLearningBanner";
+import QuickStartSection from "@/components/home/QuickStartSection";
+import { useHomePageData } from "@/hooks/learner/useHomePageData";
 
 export default function Home() {
-  const router = useRouter();
-  const [courses, setCourses] = useState<any[]>([]);
-  const [userProgress, setUserProgress] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetchData = useCallback(async () => {
-    try {
-      const meRes = await fetch("/api/auth/me");
-      const meData = await meRes.json();
-      if (!meRes.ok || !meData.user) {
-        router.replace("/login?redirect=/");
-        return;
-      }
-      const userId = meData.user.id;
-
-      const progressResponse = await fetch(
-        `/api/users/progress?userId=${userId}`
-      );
-      const progressData = await progressResponse.json();
-      setUserProgress(progressData);
-
-      const coursesResponse = await fetch("/api/courses");
-      const coursesData = await coursesResponse.json();
-      setCourses(coursesData.courses || []);
-    } catch (error) {
-      devError("Error fetching data:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [router]);
-
-  useEffect(() => {
-    void fetchData();
-  }, [fetchData]);
+  const { courses, userProgress, loading } = useHomePageData();
 
   if (loading) {
     return (
-      <div className="text-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="text-gray-600 mt-4">Loading your progress...</p>
-      </div>
+      <PageLoadingSpinner
+        size="sm"
+        message="Loading your progress..."
+      />
     );
   }
 
@@ -56,12 +24,11 @@ export default function Home() {
   const firstUnit = firstCourse?.units[0];
   const firstLesson = firstUnit?.lessons[0];
 
-  // Determine continue learning link
   const continueLearningLink = userProgress?.lastIncompleteLesson
     ? `/units/${userProgress.lastIncompleteLesson.unitId}/lessons/${userProgress.lastIncompleteLesson.id}`
     : firstLesson
-    ? `/units/${firstUnit.id}/lessons/${firstLesson.id}`
-    : "/units";
+      ? `/units/${firstUnit.id}/lessons/${firstLesson.id}`
+      : "/units";
 
   const startLearningLink = firstLesson
     ? `/units/${firstUnit.id}/lessons/${firstLesson.id}`
@@ -71,6 +38,9 @@ export default function Home() {
     ? `/units/${firstUnit.id}/lessons/${firstLesson.id}/flashcards`
     : "/units";
 
+  const hasProgress =
+    userProgress?.stats && userProgress.stats.lessonsCompleted > 0;
+
   return (
     <div className="space-y-8">
       <PageHeader
@@ -79,63 +49,25 @@ export default function Home() {
         className="text-center py-12"
       />
 
-      {userProgress?.stats && userProgress.stats.lessonsCompleted > 0 ? (
-        <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold mb-2">Continue Learning</h2>
-              <p className="text-blue-100 mb-2">
-                You have completed {userProgress.stats.lessonsCompleted}{" "}
-                lessons. Keep going!
-              </p>
-              {userProgress.lastIncompleteLesson && (
-                <p className="text-sm text-blue-200">
-                  Next: {userProgress.lastIncompleteLesson.title}
-                </p>
-              )}
-            </div>
-            <div className="text-right">
-              <div className="text-sm text-blue-200 mb-2">
-                {userProgress.stats.xp} XP •{" "}
-                {userProgress.stats.lessonsCompleted} lessons
-              </div>
-              <Button
-                href={continueLearningLink}
-                variant="secondary"
-                size="lg"
-                className="!bg-white !text-blue-700 hover:!bg-blue-50 !font-bold !border-2 !border-white shadow-lg"
-              >
-                Continue Learning →
-              </Button>
-            </div>
-          </div>
-        </div>
+      {hasProgress ? (
+        <ContinueLearningBanner
+          lessonsCompleted={userProgress.stats.lessonsCompleted}
+          xp={userProgress.stats.xp}
+          lastIncompleteLesson={userProgress.lastIncompleteLesson}
+          continueLearningLink={continueLearningLink}
+        />
       ) : (
-        // Quick Start Section - Show if user has no progress
-        <div className="bg-gradient-to-r from-green-500 to-blue-600 rounded-xl p-6 text-white text-center">
-          <h2 className="text-2xl font-bold mb-2">Ready to Start Learning?</h2>
-          <p className="text-green-100 mb-4">
-            {firstUnit
-              ? `${firstUnit.title} is ready for you!`
-              : "Start your Czech learning journey!"}
-          </p>
-          <Button
-            href={startLearningLink}
-            variant="outline"
-            size="lg"
-            className="!bg-white !text-green-800 hover:!bg-green-50 !font-bold !border-2 !border-white shadow-lg !text-lg"
-          >
-            {firstLesson ? `Start ${firstLesson.title}` : "Start Learning"}
-          </Button>
-        </div>
+        <QuickStartSection
+          firstUnit={firstUnit}
+          firstLesson={firstLesson}
+          startLearningLink={startLearningLink}
+        />
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {firstLesson && (
           <Card className="p-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">
-              Quick Start
-            </h3>
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Quick Start</h3>
             <p className="text-gray-600 mb-4">
               Jump right into the first lesson: {firstLesson.title}
             </p>
@@ -206,9 +138,7 @@ export default function Home() {
           <div className="text-center p-4 bg-purple-50 rounded-lg">
             <div className="text-2xl mb-2">🎴</div>
             <h4 className="font-medium text-gray-800 mb-1">Flashcards</h4>
-            <p className="text-sm text-gray-600 mb-3">
-              Review vocabulary cards
-            </p>
+            <p className="text-sm text-gray-600 mb-3">Review vocabulary cards</p>
             <Button href={flashcardsLink} variant="primary" size="sm">
               Review Cards
             </Button>

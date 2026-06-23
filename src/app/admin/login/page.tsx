@@ -7,11 +7,9 @@ import PageHeader from "@/components/PageHeader";
 import Card from "@/components/Card";
 import Button from "@/components/Button";
 import PasswordInput from "@/components/PasswordInput";
-
-function safeRedirect(raw: string | null, fallback: string): string {
-  if (!raw || !raw.startsWith("/")) return fallback;
-  return raw;
-}
+import AuthAlert from "@/components/auth/AuthAlert";
+import AuthRoleToggle from "@/components/auth/AuthRoleToggle";
+import { safeRedirect } from "@/lib/auth/safe-redirect";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -77,33 +75,16 @@ export default function AdminLoginPage() {
           className="max-w-md mx-auto w-full shadow-md border border-slate-200/80"
         >
           {queryReady && reset && (
-            <p className="text-sm text-green-700 bg-green-50 p-3 rounded-lg mb-4">
+            <AuthAlert variant="success" className="mb-4">
               Password updated. Sign in with your new password.
-            </p>
+            </AuthAlert>
           )}
-          <div className="mb-4">
-            <div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1">
-              <button
-                type="button"
-                onClick={() => router.push(userLoginUrl())}
-                className="rounded-lg px-3 py-2 text-sm font-semibold transition-colors text-slate-600 hover:text-slate-900"
-              >
-                User
-              </button>
-              <button
-                type="button"
-                className="rounded-lg px-3 py-2 text-sm font-semibold transition-colors bg-white text-slate-900 shadow-sm"
-              >
-                Admin
-              </button>
-            </div>
-          </div>
+          <AuthRoleToggle
+            activeRole="admin"
+            onUserClick={() => router.push(userLoginUrl())}
+          />
 
-          {error && (
-            <p className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
-              {error}
-            </p>
-          )}
+          {error && <AuthAlert>{error}</AuthAlert>}
 
           <form onSubmit={onSubmit} className="space-y-4 mt-4">
             <div>

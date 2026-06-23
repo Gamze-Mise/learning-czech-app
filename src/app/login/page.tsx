@@ -7,11 +7,9 @@ import PageHeader from "@/components/PageHeader";
 import Card from "@/components/Card";
 import Button from "@/components/Button";
 import PasswordInput from "@/components/PasswordInput";
-
-function safeRedirect(raw: string | null, fallback: string): string {
-  if (!raw || !raw.startsWith("/")) return fallback;
-  return raw;
-}
+import AuthAlert from "@/components/auth/AuthAlert";
+import AuthRoleToggle from "@/components/auth/AuthRoleToggle";
+import { safeRedirect } from "@/lib/auth/safe-redirect";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,7 +30,7 @@ export default function LoginPage() {
       const r = safeRedirect(sp.get("redirect"), "/");
       const adminRedirect = r.startsWith("/admin") ? r : "/admin";
       router.replace(
-        `/admin/login?redirect=${encodeURIComponent(adminRedirect)}`
+        `/admin/login?redirect=${encodeURIComponent(adminRedirect)}`,
       );
       return;
     }
@@ -84,41 +82,24 @@ export default function LoginPage() {
           hover={false}
           className="max-w-md mx-auto w-full shadow-md border border-slate-200/80"
         >
-          <div className="mb-4">
-            <div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1">
-              <button
-                type="button"
-                className="rounded-lg px-3 py-2 text-sm font-semibold transition-colors bg-white text-slate-900 shadow-sm"
-              >
-                User
-              </button>
-              <button
-                type="button"
-                onClick={() => router.push(adminLoginUrl())}
-                className="rounded-lg px-3 py-2 text-sm font-semibold transition-colors text-slate-600 hover:text-slate-900"
-              >
-                Admin
-              </button>
-            </div>
-          </div>
+          <AuthRoleToggle
+            activeRole="user"
+            onAdminClick={() => router.push(adminLoginUrl())}
+          />
 
           {queryReady && verified && (
-            <p className="text-sm text-green-700 bg-green-50 p-3 rounded-lg mb-4">
+            <AuthAlert variant="success" className="mb-4">
               Email verified. You can sign in now.
-            </p>
+            </AuthAlert>
           )}
           {queryReady && reset && (
-            <p className="text-sm text-green-700 bg-green-50 p-3 rounded-lg mb-4">
+            <AuthAlert variant="success" className="mb-4">
               Password updated. Sign in with your new password.
-            </p>
+            </AuthAlert>
           )}
 
           <form onSubmit={onSubmit} className="space-y-4">
-            {error && (
-              <p className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
-                {error}
-              </p>
-            )}
+            {error && <AuthAlert>{error}</AuthAlert>}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Email

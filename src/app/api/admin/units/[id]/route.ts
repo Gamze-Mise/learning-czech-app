@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/auth/require-admin";
 import { internalError, jsonError, jsonOk, logApiError } from "@/lib/api-response";
+import { parseRouteId } from "@/lib/api/parse-id";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -10,8 +11,9 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
   if (!session) return response!;
 
   const { id } = await ctx.params;
-  const unitId = Number(id);
-  if (!Number.isFinite(unitId)) return jsonError("Invalid id", 400);
+  const parsed = parseRouteId(id);
+  if ("error" in parsed) return jsonError(parsed.error, 400);
+  const unitId = parsed.id;
 
   try {
     const unit = await prisma.unit.findUnique({
@@ -34,8 +36,9 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
   if (!session) return response!;
 
   const { id } = await ctx.params;
-  const unitId = Number(id);
-  if (!Number.isFinite(unitId)) return jsonError("Invalid id", 400);
+  const parsed = parseRouteId(id);
+  if ("error" in parsed) return jsonError(parsed.error, 400);
+  const unitId = parsed.id;
 
   try {
     const body = await request.json();
@@ -62,8 +65,9 @@ export async function DELETE(_req: NextRequest, ctx: Ctx) {
   if (!session) return response!;
 
   const { id } = await ctx.params;
-  const unitId = Number(id);
-  if (!Number.isFinite(unitId)) return jsonError("Invalid id", 400);
+  const parsed = parseRouteId(id);
+  if ("error" in parsed) return jsonError(parsed.error, 400);
+  const unitId = parsed.id;
 
   try {
     await prisma.unit.update({ where: { id: unitId }, data: { isActive: false } });

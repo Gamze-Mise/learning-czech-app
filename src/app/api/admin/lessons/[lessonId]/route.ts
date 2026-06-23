@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/auth/require-admin";
 import { LessonType } from "@prisma/client";
 import { internalError, jsonError, jsonOk, logApiError } from "@/lib/api-response";
+import { parseRouteId } from "@/lib/api/parse-id";
 
 type Ctx = { params: Promise<{ lessonId: string }> };
 
@@ -11,10 +12,9 @@ export async function GET(_request: NextRequest, ctx: Ctx) {
   if (!session) return response!;
 
   const { lessonId: idParam } = await ctx.params;
-  const lessonId = parseInt(idParam, 10);
-  if (Number.isNaN(lessonId)) {
-    return jsonError("Invalid id", 400);
-  }
+  const parsed = parseRouteId(idParam);
+  if ("error" in parsed) return jsonError(parsed.error, 400);
+  const lessonId = parsed.id;
 
   try {
     const lesson = await prisma.lesson.findUnique({
@@ -43,10 +43,9 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
   if (!session) return response!;
 
   const { lessonId: idParam } = await ctx.params;
-  const lessonId = parseInt(idParam, 10);
-  if (Number.isNaN(lessonId)) {
-    return jsonError("Invalid id", 400);
-  }
+  const parsed = parseRouteId(idParam);
+  if ("error" in parsed) return jsonError(parsed.error, 400);
+  const lessonId = parsed.id;
 
   try {
     const body = await request.json();
@@ -93,10 +92,9 @@ export async function DELETE(_request: NextRequest, ctx: Ctx) {
   if (!session) return response!;
 
   const { lessonId: idParam } = await ctx.params;
-  const lessonId = parseInt(idParam, 10);
-  if (Number.isNaN(lessonId)) {
-    return jsonError("Invalid id", 400);
-  }
+  const parsed = parseRouteId(idParam);
+  if ("error" in parsed) return jsonError(parsed.error, 400);
+  const lessonId = parsed.id;
 
   try {
     await prisma.lesson.update({

@@ -5,6 +5,7 @@ import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import Card from "@/components/Card";
 import Button from "@/components/Button";
+import AuthAlert from "@/components/auth/AuthAlert";
 
 function intentFromSearch(search: string): "admin" | "user" {
   const v = new URLSearchParams(search).get("intent")?.trim().toLowerCase();
@@ -66,14 +67,8 @@ export default function ForgotPasswordPage() {
               accounts.
             </p>
           )}
-          {error && (
-            <p className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">{error}</p>
-          )}
-          {message && (
-            <p className="text-sm text-green-700 bg-green-50 p-3 rounded-lg">
-              {message}
-            </p>
-          )}
+          {error && <AuthAlert>{error}</AuthAlert>}
+          {message && <AuthAlert variant="success">{message}</AuthAlert>}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Email

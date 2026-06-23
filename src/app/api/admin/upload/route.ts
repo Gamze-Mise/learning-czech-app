@@ -3,68 +3,13 @@ import { randomBytes } from "crypto";
 import { requireAdminSession } from "@/lib/auth/require-admin";
 import { jsonError, jsonOk, logApiError } from "@/lib/api-response";
 import { getCloudinary } from "@/lib/cloudinary";
-
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-const MAX_AUDIO_BYTES = 20 * 1024 * 1024;
-
-const IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
-
-const AUDIO_MIMES = new Set([
-  "audio/mpeg",
-  "audio/mp3",
-  "audio/wav",
-  "audio/x-wav",
-  "audio/wave",
-  "audio/ogg",
-  "audio/webm",
-  "audio/aac",
-  "audio/x-aac",
-  "audio/mp4",
-  "audio/x-m4a",
-  "audio/m4a",
-  "audio/flac",
-  "audio/x-flac",
-]);
-
-const extByMime: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-  "image/gif": "gif",
-};
-
-function guessMimeFromFilename(name: string): string | null {
-  const n = name.trim().toLowerCase();
-  if (n.endsWith(".mp3")) return "audio/mpeg";
-  if (n.endsWith(".wav")) return "audio/wav";
-  if (n.endsWith(".ogg")) return "audio/ogg";
-  if (n.endsWith(".webm")) return "audio/webm";
-  if (n.endsWith(".m4a") || n.endsWith(".mp4")) return "audio/mp4";
-  if (n.endsWith(".aac")) return "audio/aac";
-  if (n.endsWith(".flac")) return "audio/flac";
-  if (n.endsWith(".jpg") || n.endsWith(".jpeg")) return "image/jpeg";
-  if (n.endsWith(".png")) return "image/png";
-  if (n.endsWith(".webp")) return "image/webp";
-  if (n.endsWith(".gif")) return "image/gif";
-  return null;
-}
-
-function resolveMime(entry: Blob, raw: string): string {
-  if (raw && raw !== "application/octet-stream") return raw;
-  const name =
-    typeof File !== "undefined" && entry instanceof File && entry.name
-      ? entry.name
-      : "";
-  return guessMimeFromFilename(name) ?? raw;
-}
-
-type UploadKind = "image" | "audio";
-
-function classifyMime(mime: string): UploadKind | null {
-  if (IMAGE_MIMES.has(mime)) return "image";
-  if (AUDIO_MIMES.has(mime)) return "audio";
-  return null;
-}
+import {
+  classifyUploadMime,
+  IMAGE_EXT_BY_MIME,
+  MAX_AUDIO_BYTES,
+  MAX_IMAGE_BYTES,
+  resolveUploadMime,
+} from "@/lib/admin/upload-mime";
 
 export async function POST(request: NextRequest) {
   const { session, response } = await requireAdminSession();
@@ -78,8 +23,8 @@ export async function POST(request: NextRequest) {
     }
 
     const rawMime = entry.type || "application/octet-stream";
-    const mime = resolveMime(entry, rawMime);
-    const kind = classifyMime(mime);
+    const mime = resolveUploadMime(entry, rawMime);
+    const kind = classifyUploadMime(mime);
 
     if (!kind) {
       return jsonError(
@@ -106,7 +51,7 @@ export async function POST(request: NextRequest) {
       const cloudinary = getCloudinary();
       result = await new Promise<{ secure_url?: string }>((resolve, reject) => {
         if (kind === "image") {
-          const ext = extByMime[mime] ?? "bin";
+          const ext = IMAGE_EXT_BY_MIME[mime] ?? "bin";
           const stream = cloudinary.uploader.upload_stream(
             {
               resource_type: "image",
@@ -122,7 +67,6 @@ export async function POST(request: NextRequest) {
           );
           stream.end(buffer);
         } else {
-          // Cloudinary serves many audio types under the "video" resource type.
           const stream = cloudinary.uploader.upload_stream(
             {
               resource_type: "video",

@@ -7,6 +7,7 @@ import PageHeader from "@/components/PageHeader";
 import Card from "@/components/Card";
 import Button from "@/components/Button";
 import PasswordInput from "@/components/PasswordInput";
+import AuthAlert from "@/components/auth/AuthAlert";
 
 function RegisterForm() {
   const searchParams = useSearchParams();
@@ -19,7 +20,7 @@ function RegisterForm() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [devVerificationUrl, setDevVerificationUrl] = useState<string | null>(
-    null
+    null,
   );
   const [emailSendNote, setEmailSendNote] = useState<string | null>(null);
 
@@ -76,25 +77,13 @@ function RegisterForm() {
   return (
     <Card className="max-w-md mx-auto">
       <form onSubmit={onSubmit} className="space-y-4">
-        {errorHint && (
-          <p className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
-            {errorHint}
-          </p>
-        )}
-        {error && (
-          <p className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
-            {error}
-          </p>
-        )}
-        {message && (
-          <p className="text-sm text-green-700 bg-green-50 p-3 rounded-lg">
-            {message}
-          </p>
-        )}
+        {errorHint && <AuthAlert>{errorHint}</AuthAlert>}
+        {error && <AuthAlert>{error}</AuthAlert>}
+        {message && <AuthAlert variant="success">{message}</AuthAlert>}
         {emailSendNote && (
-          <p className="text-sm text-amber-800 bg-amber-50 p-3 rounded-lg border border-amber-200">
+          <AuthAlert variant="warning" className="border border-amber-200">
             <strong>Email error:</strong> {emailSendNote}
-          </p>
+          </AuthAlert>
         )}
         {devVerificationUrl && (
           <div className="text-sm bg-blue-50 text-blue-900 p-3 rounded-lg border border-blue-200 space-y-2">

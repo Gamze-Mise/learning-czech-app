@@ -1,6 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
+import {
+  isPreviewableMediaUrl,
+  useAdminFileUpload,
+} from "@/hooks/useAdminFileUpload";
 
 type Props = {
   label: string;
@@ -15,18 +19,6 @@ type Props = {
   enableFileUpload?: boolean;
 };
 
-function messageFromBody(text: string): string {
-  const t = text.trim();
-  if (!t) return "Upload failed";
-  try {
-    const j = JSON.parse(t) as { error?: string };
-    if (typeof j.error === "string" && j.error.trim()) return j.error.trim();
-  } catch {
-    /* ignore */
-  }
-  return t.slice(0, 200);
-}
-
 export default function AdminImageField({
   label,
   value,
@@ -36,46 +28,10 @@ export default function AdminImageField({
   enableFileUpload = false,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { uploading, error, upload } = useAdminFileUpload(onChange);
 
   const trimmed = value.trim();
-  const showPreview =
-    trimmed &&
-    (trimmed.startsWith("http://") ||
-      trimmed.startsWith("https://") ||
-      trimmed.startsWith("/"));
-
-  async function uploadFile(file: File) {
-    setUploading(true);
-    setError(null);
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-      const text = await res.text();
-      let data: { url?: string; error?: string };
-      try {
-        data = text ? (JSON.parse(text) as { url?: string; error?: string }) : {};
-      } catch {
-        setError(messageFromBody(text));
-        return;
-      }
-      if (!res.ok) {
-        setError(
-          typeof data.error === "string" && data.error.trim()
-            ? data.error
-            : messageFromBody(text)
-        );
-        return;
-      }
-      if (data.url) onChange(data.url);
-    } catch {
-      setError("Network error");
-    } finally {
-      setUploading(false);
-    }
-  }
+  const showPreview = trimmed && isPreviewableMediaUrl(trimmed);
 
   return (
     <div className={compact ? "space-y-1.5" : "space-y-2"}>
@@ -133,7 +89,7 @@ export default function AdminImageField({
                 onChange={(e) => {
                   const f = e.target.files?.[0];
                   e.target.value = "";
-                  if (f) void uploadFile(f);
+                  if (f) void upload(f);
                 }}
               />
               <button

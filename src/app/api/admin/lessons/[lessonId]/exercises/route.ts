@@ -1,49 +1,12 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/auth/require-admin";
-import { ExerciseType } from "@prisma/client";
+import { ExerciseType, Prisma } from "@prisma/client";
 import { internalError, jsonError, jsonOk, logApiError } from "@/lib/api-response";
+import { parseOptionsFromBody } from "@/lib/exercises/options";
+import { validateExercise } from "@/lib/exercises/validation";
 
 type Ctx = { params: Promise<{ lessonId: string }> };
-
-function isMcqLike(type: ExerciseType): boolean {
-  return type === "MCQ" || type === "LISTENING";
-}
-
-function isFillLike(type: ExerciseType): boolean {
-  return type === "FILL" || type === "TRANSLATION";
-}
-
-function validateExercise(type: ExerciseType, answer: string | null, options: any): string | null {
-  if (isFillLike(type)) {
-    if (!answer || !answer.trim()) return "Answer is required for this exercise type.";
-  }
-
-  if (isMcqLike(type)) {
-    if (!Array.isArray(options) || options.length < 2) {
-      return "MCQ/LISTENING requires at least 2 options.";
-    }
-    const correctCount = options.filter((o: any) => o && o.correct === true).length;
-    if (correctCount !== 1) return "MCQ/LISTENING requires exactly 1 correct option.";
-  }
-
-  if (type === "MATCHING") {
-    if (!Array.isArray(options) || options.length < 1) {
-      return "MATCHING requires at least 1 pair.";
-    }
-    const ok = options.every(
-      (o: any) =>
-        o &&
-        typeof o.left === "string" &&
-        typeof o.right === "string" &&
-        o.left.trim().length > 0 &&
-        o.right.trim().length > 0
-    );
-    if (!ok) return "MATCHING options must be an array of { left, right } with non-empty strings.";
-  }
-
-  return null;
-}
 
 export async function GET(_req: NextRequest, ctx: Ctx) {
   const { session, response } = await requireAdminSession();
@@ -90,14 +53,9 @@ export async function POST(request: NextRequest, ctx: Ctx) {
     const imageUrl = body.imageUrl != null && String(body.imageUrl).trim() ? String(body.imageUrl).trim() : null;
     const isActive = body.isActive !== false;
 
-    let options: any = null;
-    if (body.options != null && String(body.options).trim()) {
-      try {
-        options = JSON.parse(String(body.options));
-      } catch {
-        return jsonError("options must be valid JSON", 400);
-      }
-    }
+    const parsedOptions = parseOptionsFromBody(body.options);
+    if (parsedOptions.error) return jsonError(parsedOptions.error, 400);
+    const options = parsedOptions.options;
 
     if (!question) return jsonError("question is required", 400);
 
@@ -121,7 +79,7 @@ export async function POST(request: NextRequest, ctx: Ctx) {
         order,
         type,
         question,
-        options,
+        options: options as Prisma.InputJsonValue,
         answer,
         explanation,
         audioUrl,
@@ -138,4 +96,3 @@ export async function POST(request: NextRequest, ctx: Ctx) {
     return internalError();
   }
 }
-

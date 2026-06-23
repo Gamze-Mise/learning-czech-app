@@ -9,15 +9,25 @@ export async function GET(
   try {
     const { lessonId } = await context.params;
 
-    const flashcards = await prisma.flashcard.findMany({
-      where: {
-        lessonId: parseInt(lessonId),
-        isActive: true,
-      },
-      orderBy: { order: "asc" },
-    });
+    const lessonIdNum = parseInt(lessonId);
 
-    return jsonOk({ flashcards });
+    const [flashcards, exerciseCount] = await Promise.all([
+      prisma.flashcard.findMany({
+        where: {
+          lessonId: lessonIdNum,
+          isActive: true,
+        },
+        orderBy: { order: "asc" },
+      }),
+      prisma.exercise.count({
+        where: {
+          lessonId: lessonIdNum,
+          isActive: true,
+        },
+      }),
+    ]);
+
+    return jsonOk({ flashcards, exerciseCount });
   } catch (error) {
     logApiError("flashcards/[lessonId]", error);
     return internalError();
