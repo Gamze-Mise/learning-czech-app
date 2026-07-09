@@ -3,7 +3,12 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/auth/password";
 import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
-import { internalError, jsonError, jsonOk, logApiError } from "@/lib/api-response";
+import {
+  internalError,
+  jsonError,
+  jsonOk,
+  logApiError,
+} from "@/lib/api-response";
 
 export const dynamic = "force-dynamic";
 
@@ -11,14 +16,14 @@ function envConfigErrorResponse(): ReturnType<typeof internalError> | null {
   const secret = process.env.AUTH_SECRET?.trim();
   if (!secret || secret.length < 32) {
     console.error(
-      "[auth/login] Set AUTH_SECRET (min 32 chars) in Vercel → Environment Variables for Production."
+      "[auth/login] Set AUTH_SECRET (min 32 chars) in Vercel → Environment Variables for Production.",
     );
     return internalError();
   }
   const db = process.env.DATABASE_URL?.trim();
   if (!db) {
     console.error(
-      "[auth/login] Set DATABASE_URL in Vercel (hosted Postgres, not localhost)."
+      "[auth/login] Set DATABASE_URL in Vercel (hosted Postgres, not localhost).",
     );
     return internalError();
   }
@@ -76,7 +81,7 @@ export async function POST(request: NextRequest) {
     if (!user.emailVerified) {
       return jsonError(
         "Please verify your email first. Check your inbox for the confirmation link.",
-        403
+        403,
       );
     }
 
